@@ -5,6 +5,7 @@ import ProposedService from './ProposedService';
 import Actions from './Actions';
 import * as _ from 'lodash/fp/object';
 
+
 class ChangeRequests extends React.Component {
   constructor(props) {
     super(props);
@@ -92,13 +93,7 @@ function renderProposedServices(services, actionHandler) {
       <div key={'svc'+service.id}>
         <p>Proposed Service</p>
         <div className="request-container">
-          <ProposedService service={service} />
-          <Actions
-            id={service.id}
-            actionHandler={actionHandler}
-            approveAction={ChangeRequestTypes.APPROVE_SERVICE}
-            rejectAction={ChangeRequestTypes.REJECT_SERVICE}
-          />
+          <ProposedService service={service} actionHandler={actionHandler} />
         </div>
       </div>
     );

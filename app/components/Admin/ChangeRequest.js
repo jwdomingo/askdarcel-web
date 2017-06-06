@@ -32,7 +32,7 @@ class ChangeRequest extends React.Component {
     //"ChangeRequest" is 13 characters, so this will give us the first part of the string
     let objectType = changeRequest.type;
     let object = {};
-
+    
     switch (objectType) {
       case 'ResourceChangeRequest':
         object = resource;
@@ -84,12 +84,13 @@ class ChangeRequest extends React.Component {
     let existingRecord = this.state.existingRecord;
     let changeRequestFields = this.state.changeRequestFields;
 
+    // TODO: existingRecord && existingRecord[field], need to fix this still
     for (let field in changeRequestFields) {
       changedFields.push(
         <div key={field} className="request-fields">
 					<div className="request-entry">
 						<p className="request-cell name existing">{field}</p>
-						<p className="request-cell value existing">{existingRecord[field]}</p>
+						<p className="request-cell value existing">{existingRecord && existingRecord[field]}</p>
 					</div>
 					<div className="request-entry">
 						<p className="request-cell name">{field}</p>
@@ -118,5 +119,6 @@ class ChangeRequest extends React.Component {
     );
   }
 }
+
 
 export default ChangeRequest;

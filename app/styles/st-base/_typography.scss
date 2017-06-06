@@ -18,37 +18,34 @@ $font-family-base: 'Lato', 'Open Sans', 'Helvetica Neue', 'Arial', sans-serif;
   }
 }
 %font-size-x-large {
-  font-size: calc-em(36px);
-  line-height: calc-em(44px);
+  font-size: calc-em(30px);
+  line-height: calc-em(36px);
   @include r_max($break-tablet-s) {
     font-size: calc-em(28px);
     line-height: calc-em(38px);
   }
 }
 %font-size-large {
-  font-size: calc-em(28px);
-  line-height: calc-em(38px);
+  font-size: calc-em(24px);
+  line-height: calc-em(30px);
   @include r_max($break-tablet-s) {
-    font-size: calc-em(20px);
+    font-size: calc-em(22px);
     line-height: calc-em(27px);
   }
 }
 %font-size-medium {
-  font-size: calc-em(20px);
-  line-height: calc-em(27px);
-  @include r_max($break-tablet-s) {
-    font-size: calc-em(18px);
-    line-height: calc-em(25px);
-  }
+  font-size: calc-em(19px);
+  line-height: calc-em(23px);
 }
+
 %font-size-default {
-  font-size: calc-em(18px);
+  font-size: calc-em(17px);
 }
 %font-size-small {
-  font-size: calc-em(16px);
+  font-size: calc-em(15px);
 }
 %font-size-tiny {
-  font-size: calc-em(14px);
+  font-size: calc-em(13px);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import classNames from 'classnames';
-import Hours from './Hours';
+import DetailedHours from './DetailedHours';
 
 class Services extends Component {
   constructor(props) {
@@ -28,10 +28,6 @@ class Services extends Component {
   render() {
     return (
       <div className="services-container">
-        {/* <div className="innercontainer">
-              <h4>Description</h4>
-              <p>{this.props.description}</p>
-            </div> */}
         {this.renderServicesSection()}
       </div>
     );
@@ -52,44 +48,68 @@ class Service extends Component {
   render() {
     let { infoHidden } = this.state;
     return (
-      <section className="service">
-        <h2 className="service-header">{this.props.service.name}</h2>
-        <div className="service-details">
-          <p className="service-description">{this.props.service.long_description}</p>
-        </div>
-        <div className="details-toggle" onClick={this.toggleVisible}>
-          <span>{infoHidden ?
-              <span><i className="material-icons">keyboard_arrow_down</i>More Info</span> :
-              null}</span>
-        </div>
-        { infoHidden ? null :
-          <div className="service-application-process-container">
-            <ul className="org-meta">
-              <ServiceEligibility subject='HOW TO APPLY' result={this.props.service.application_process}/>
-              <ServiceEligibility subject='ELGIBILITY' result={this.props.service.eligibility}/>
-              <ServiceEligibility subject='REQUIRED DOCUMENTS' result={this.props.service.required_documents}/>
-              <ServiceEligibility subject='FEES' result={this.props.service.fee}/>
-              <Hours schedule={this.props.service.schedule.schedule_days} />
-              <Notes notes={this.props.service.notes}/>
-            </ul>
-            <div className="details-toggle" onClick={this.toggleVisible}>
-              <span>{infoHidden ?
-                  null :
-                  <span><i className="material-icons">keyboard_arrow_up</i>Less Info</span>}</span>
-            </div>
+		<li className="service">
+			<div className="service--meta disabled-feature">
+				<p><ServiceCategory category={this.props.service.category} /></p>
+				<p>updated {this.props.service.updated_date}</p>
+			</div>
+      <h2 className="service--header">{this.props.service.name}</h2>
+      <p className="service--description">{this.props.service.long_description}</p>
+      <div className="service--details-toggle" onClick={this.toggleVisible}>
+        <span>{infoHidden ?
+            <span>More Info <i className="material-icons">keyboard_arrow_down</i></span> :
+            null}</span>
+      </div>
+
+      { infoHidden ? null :
+        <div className="service-application-process-container">
+          <ul className="service--details">
+            <ServiceEligibility subject='How to apply' result={this.props.service.application_process}/>
+            <ServiceEligibility subject='Eligibility' result={this.props.service.eligibility}/>
+            <ServiceEligibility subject='Required documents' result={this.props.service.required_documents}/>
+            <ServiceEligibility subject='Fees' result={this.props.service.fee}/>
+            {this.props.service.notes.length ? <Notes notes={this.props.service.notes}/> : null  }
+            <WeeklyHours schedule={this.props.service.schedule} />
+          </ul>
+          <div className="service--details-toggle" onClick={this.toggleVisible}>
+            <span>{infoHidden ?
+                null :
+                <span>Less Info <i className="material-icons">keyboard_arrow_up</i></span>}</span>
           </div>
-      }
-      </section>
+        </div>
+    	}
+
+    </li>
     );
   }
+}
+
+class WeeklyHours extends Component {
+	render() {
+		return (
+			<li className="service--details--item">
+				<header>Hours</header>
+				<div className="service--details--item--info"><DetailedHours schedule={this.props.schedule.schedule_days} /></div>
+			</li>
+		);
+	}
+}
+
+
+class ServiceCategory extends Component {
+	render() {
+		return (
+			<span>{this.props.category}</span>
+		);
+	}
 }
 
 class ServiceEligibility extends Component {
   render() {
     return this.props.result ? (
-      <li>
-        <div>{this.props.subject}</div>
-        <div className="service-row">{this.props.result}</div>
+      <li className="service--details--item">
+        <header>{this.props.subject}</header>
+        <div className="service--details--item--info">{this.props.result}</div>
       </li>
     ) : null;
   }
@@ -102,9 +122,9 @@ class Notes extends Component {
     });
 
     return (
-      <li>
-        <div>NOTES</div>
-        <ul>{notes}</ul>
+      <li className="service--details--item">
+        <header>Notes</header>
+        <ul className="service--details--item--info">{notes}</ul>
       </li>
     );
   }
@@ -113,7 +133,7 @@ class Notes extends Component {
 class Note extends Component {
   render() {
     return (
-      <li className="service-row">{this.props.note.note}</li>
+      <li className="services--details--notes-list--item">{this.props.note.note}</li>
     );
   }
 }
