@@ -12,6 +12,7 @@ import Google from './utils/google';
 import CreateAccount from './components/User/CreateAccount';
 import TestAuth from './components/User/TestAuth';
 import Admin from './components/Admin/Admin';
+import AddResource from './components/Resource/AddResource';
 
 import { RequireAuth } from './components/Auth/RequireAuth';
 
@@ -40,6 +41,7 @@ export default (
     <Route name="resources" path="/resources" component={ ResourcesTable } />
     <Route name="editResource" path="/resource/edit" component={ EditSections } />
     <Route name="resource" path="/resource" component={ Resource }  />
+    <Route name="add-resource" path="/add-resource" component={ AddResource }  />
     <Route name="admin" path="/admin" component={ RequireAuth(Admin) } />
     <Route name="login" path="/login" component={ Login } />
     <Route path="*" onEnter={ redirectToRoot } />

@@ -1,3 +1,5 @@
-export default forms = {
+const forms = {
   resource: {},
-}
+};
+
+export default forms;
