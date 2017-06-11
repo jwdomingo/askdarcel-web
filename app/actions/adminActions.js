@@ -2,9 +2,9 @@ import * as types from './actionTypes';
 import * as authApi from '../api/auth';
 import { browserHistory } from 'react-router';
 
-function adminLoginRequest() {
+function getChangeRequests() {
   return {
-    type: types.ADMIN_LOGIN_REQUEST
+    type: types.GET_CHANGE_REQUESTS
   }
 }
 
@@ -20,10 +20,12 @@ function adminLoginError() {
     type: types.ADMIN_LOGIN_ERROR
   }
 }
+
+
 export default {
-  adminLogin(email, password){
+  getChangeRequests(){
     return dispatch => {
-      dispatch(adminLoginRequest())
+      dispatch(getChangeRequests())
       authApi.adminLogin(email, password)
         .then(response => {
           if( response.status === 200) {
