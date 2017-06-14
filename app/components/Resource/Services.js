@@ -117,9 +117,9 @@ class ServiceEligibility extends Component {
 
 class Notes extends Component {
   render() {
-    let notes = this.props.notes.map((note, i) => {
+    let notes = this.props.notes ?  this.props.notes.map((note, i) => {
       return <Note note={note} key={i} />
-    });
+    }) : [];
 
     return (
       <li className="service--details--item">
