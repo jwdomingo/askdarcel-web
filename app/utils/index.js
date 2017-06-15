@@ -9,15 +9,60 @@ export function getAuthRequestHeaders() {
   };
 }
 
-export function timeToString(hours) {
+/**
+ * Convert time from concatenated hours-minutes format to a Date object.
+ *
+ * E.g.
+ * '700' to new Date(..., ..., ..., 7, 0)
+ * '1330' to new Date(..., ..., ..., 13, 30)
+ */
+function timeToDate(hours) {
   const date = new Date();
   if (hours) {
     const hoursString = hours.toString();
     date.setHours(hoursString.substring(0, hoursString.length - 2));
     date.setMinutes(hoursString.substring(hoursString.length - 2, hoursString.length));
     date.setSeconds(0);
+    return date;
+  }
+  return null;
+}
 
+/**
+ * Convert time from concatenated hours-minutes format to HH:MM P
+ *
+ * E.g.
+ * '700' to '7:00 AM'
+ * '1330' to '1:30 PM'
+ */
+export function timeToString(hours) {
+  const date = timeToDate(hours);
+  if (date) {
     return date.toLocaleTimeString().replace(/:\d+ /, ' ');
+  }
+  return null;
+}
+
+/**
+ * Convert time from concatenated hours-minutes format to <input type="time">
+ * format.
+ *
+ * A "time" <input> value should be formatted as an RFC3339 partial-time,
+ * according to
+ * http://w3c.github.io/html-reference/input.time.html#input.time.attrs.value
+ *
+ * E.g.
+ * '700' to '7:00'
+ * '1330' to '13:30'
+ */
+export function timeToTimeInputValue(hours) {
+  const date = timeToDate(hours);
+  if (date) {
+    const hour = date.getHours();
+    const strHour = (hour < 10) ? `0${hour.toString()}` : hour.toString();
+    const minute = date.getMinutes();
+    const strMinute = (minute < 10) ? `0${minute.toString()}` : minute.toString();
+    return `${strHour}:${strMinute}`;
   }
   return null;
 }
