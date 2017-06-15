@@ -21,8 +21,6 @@ class Resource extends Component {
     let url = '/api/resources/' + resourceID;
     fetch(url).then(r => r.json())
     .then(data => {
-      data.resource.notes.push({note: "meow meow meowm oemwemmwwmowmoemowemow"});
-      data.resource.notes.push({note: "dljfjdjdjkkjlklklakjaljkajk"});
       this.setState({resource: data.resource});
     });
   }
