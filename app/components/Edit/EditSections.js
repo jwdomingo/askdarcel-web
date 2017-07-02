@@ -9,6 +9,7 @@ import EditNotes from './EditNotes';
 import EditSchedule from './EditSchedule';
 import EditPhones from './EditPhones';
 import * as dataService from '../../utils/DataService';
+import { getAuthRequestHeaders } from '../../utils/index';
 import { withRouter } from 'react-router';
 import { daysOfTheWeek } from '../../utils/index';
 import _ from 'lodash';
@@ -23,7 +24,7 @@ class EditSections extends React.Component {
       schedule_days: {},
       resourceFields: {},
       serviceFields: {},
-      addressFields: {},
+      address: {},
       services: {},
       notes: {},
       phones: [],
@@ -43,6 +44,7 @@ class EditSections extends React.Component {
     this.postNotes = this.postNotes.bind(this);
     this.postSchedule = this.postSchedule.bind(this);
     this.createResource = this.createResource.bind(this);
+    this.prepServicesData = this.prepServicesData.bind(this);
   }
 
   hasKeys(object) {
@@ -82,27 +84,48 @@ class EditSections extends React.Component {
   }
 
   createResource() {
-    let { scheduleDays, 
-          notes, 
-          phones, 
-          services, 
-          addressFields, 
-          resourceFields, 
-          scheduleObj, 
-          name, 
-          long_description,
-          short_description,
-          website,
-          email,
-          address } = this.state;
+    let {
+      scheduleObj,
+      notes,
+      phones,
+      services,
+      resourceFields,
+      name,
+      long_description,
+      short_description,
+      website,
+      email,
+      address
+    } = this.state;
 
-    services = services.services;
+    let newServices = this.prepServicesData(services.services);
+    let newResource = {
+      name,
+      address,
+      long_description, 
+      email,
+      website,
+      services: newServices,
+      notes: notes.notes ? this.prepNotesData(notes.notes) : [],
+      schedule: { schedule_days: scheduleObj },
+    };
 
-    let newResource = {};
-
-
+    let requestString = '/api/resource';
+    dataService.post(requestString, { resource: newResource }, getAuthRequestHeaders())
+      .then((response) => {
+          if (response.ok) {
+            alert('Resource successfuly created. Thanks!');
+            browserHistory.push('/');
+          } else {
+            alert('Issue creating resource, please try again.');
+            browserHistory.push('/');
+            console.log(logMessage);
+          }
+        })
   }
-  
+
+
+
   handleSubmit() {
     this.setState({ submitting: true });
     let resource = this.state.resource;
@@ -253,6 +276,40 @@ class EditSections extends React.Component {
       let uri = '/api/resources/' + this.state.resource.id + '/services';
       promises.push(dataService.post(uri, { services: newServices }));
     }
+  }
+
+  prepServicesData(servicesObj) {
+    let newServices = [];
+    for (let key in servicesObj) {
+      if (servicesObj.hasOwnProperty(key)) {
+        let currentService = servicesObj[key];
+
+        if (key < 0) {
+          if (currentService.notesObj) {
+            let notes = this.objToArray(currentService.notesObj.notes);
+            delete currentService.notesObj;
+            currentService.notes = notes;
+          }
+          currentService.schedule = this.createFullSchedule(currentService.scheduleObj);
+          delete currentService.scheduleObj;
+
+          if (!isEmpty(currentService)) {
+            newServices.push(currentService);
+          }
+        }
+      }
+    }
+    return newServices;
+  }
+
+  prepNotesData(notes) {
+    let newNotes = [];
+    for (let key in notes) {
+      if(notes.hasOwnProperty(key)) {
+        newNotes.push(notes[key].note);
+      }
+    }
+    return newNotes;
   }
 
   createFullSchedule(scheduleObj) {

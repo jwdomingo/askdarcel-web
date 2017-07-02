@@ -158,7 +158,7 @@ class ResourcesTable extends Component {
                     <ResourcesList resources={this.state.currentPage} location={this.props.userLocation} page={this.state.page} resultsPerPage={resultsPerPage} categoryId={this.state.categoryId} />
                     <div className="add-resource">
                       <li className="results-table-entry">
-                        <Link to={"ADD_PAGE"}>
+                        <Link to={"/resource/new"}>
                           <h4 className="entry-headline"><i className="material-icons">add_circle</i> Add a new resource</h4>
                         </Link>
                       </li>

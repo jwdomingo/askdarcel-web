@@ -1,14 +1,59 @@
 import React, { Component } from 'react';
 import { timeToString, stringToTime, daysOfTheWeek } from '../../utils/index';
+import { createTemplateSchedule } from '../../utils/index';
 
 class EditSchedule extends Component {
   constructor(props) {
     super(props);
 
-    let scheduleMap = {};
+    let scheduleMap = {
+      Monday: {
+        opens_at: null,
+        day: 'Monday',
+        closes_at: null,
+        id: 1,
+      },
+      Tuesday: {
+        opens_at: null,
+        day: 'Tuesday',
+        closes_at: null,
+        id: 2,
+      },
+      Wednesday: {
+        opens_at: null,
+        day: 'Wednesday',
+        closes_at: null,
+        id: 3,
+      },
+      Thursday: {
+        opens_at: null,
+        day: 'Thursday',
+        closes_at: null,
+        id: 4,
+      },
+      Friday: {
+        opens_at: null,
+        day: 'Friday',
+        closes_at: null,
+        id: 5,
+      },
+      Saturday: {
+        opens_at: null,
+        day: 'Saturday',
+        closes_at: null,
+        id: 6,
+      },
+      Sunday: {
+        opens_at: null,
+        day: 'Sunday',
+        closes_at: null,
+        id: 7,
+      },
+    };
     props.schedule && props.schedule.schedule_days.forEach(function(day) {
       scheduleMap[day.day] = day;
     });
+
 
     this.state = {
       scheduleMap: scheduleMap,
@@ -25,7 +70,7 @@ class EditSchedule extends Component {
     let field = e.target.dataset.field;
     let day = e.target.dataset.key;
     let value = e.target.value;
-    let serverDay = currScheduleMap[day];
+    let serverDay = currScheduleMap[day] || {};
     let formattedTime = stringToTime(value);
     let newUUID = this.state.uuid - 1;
 
