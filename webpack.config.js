@@ -18,7 +18,7 @@ module.exports = {
     filename: 'bundle.js'
   },
   resolve: {
-    extensions: ['', '.tsx', '.ts', '.jsx', '.js'],
+    extensions: ['.tsx', '.ts', '.jsx', '.js'],
   },
   plugins: [
     new HtmlWebpackPlugin({
@@ -31,28 +31,51 @@ module.exports = {
   ],
   devtool: 'source-map',
   module: {
-    loaders: [
+    rules: [
       {
         test: /\.jsx?$/,
-        loader: 'babel-loader',
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              presets: ['es2015', 'react', 'stage-2']
+            }
+          }
+        ],
         exclude: [/node_modules/, /typings/],
-        query: {
-          presets: ['es2015', 'react', 'stage-2']
-        }
       },
       {
         test: /\.scss$/,
-        loaders: ['style', 'css', 'sass']
+        use: ['style-loader', 'css-loader', 'sass-loader']
       },
       {
         test: /\.(ttf|otf|eot|svg|woff(2)?)(\?[a-z0-9]+)?$/,
-        loader: 'file-loader?name=fonts/[name].[ext]'
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              name: 'fonts/[name].[ext]'
+            }
+          }
+        ]
       },
       {
         test: /\.(jpe?g|png|gif|svg)$/i,
-        loaders: [
-          'file?name=[name]-[sha512:hash:hex:8].[ext]',
-          'image-webpack?bypassOnDebug&optimizationLevel=7&interlaced=false'
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              name: '[name]-[sha512:hash:hex:8].[ext]',
+            }
+          },
+          {
+            loader: 'image-webpack-loader',
+            options: {
+              bypassOnDebug: true,
+              optimizationLevel: 7,
+              interlaced: false
+            }
+          }
         ]
       }
     ]

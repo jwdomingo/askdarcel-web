@@ -1,98 +1,146 @@
 export function getAuthRequestHeaders() {
-  let authHeaders = JSON.parse(localStorage.authHeaders);
+  const authHeaders = JSON.parse(localStorage.authHeaders);
   return {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "access-token": authHeaders['access-token'],
-        "client": authHeaders.client,
-        "uid": authHeaders.uid
-      };
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+    'access-token': authHeaders['access-token'],
+    client: authHeaders.client,
+    uid: authHeaders.uid,
+  };
 }
 
+/**
+ * Convert time from concatenated hours-minutes format to a Date object.
+ *
+ * E.g.
+ * '700' to new Date(..., ..., ..., 7, 0)
+ * '1330' to new Date(..., ..., ..., 13, 30)
+ */
+function timeToDate(hours) {
+  const date = new Date();
+  if (hours) {
+    const hoursString = hours.toString();
+    date.setHours(hoursString.substring(0, hoursString.length - 2));
+    date.setMinutes(hoursString.substring(hoursString.length - 2, hoursString.length));
+    date.setSeconds(0);
+    return date;
+  }
+  return null;
+}
+
+/**
+ * Convert time from concatenated hours-minutes format to HH:MM P
+ *
+ * E.g.
+ * '700' to '7:00 AM'
+ * '1330' to '1:30 PM'
+ */
 export function timeToString(hours) {
-  let date = new Date();
-  let hoursString = hours.toString();
-
-  date.setHours(hoursString.substring(0,hoursString.length - 2));
-  date.setMinutes(hoursString.substring(hoursString.length - 2,hoursString.length));
-  date.setSeconds(0)
-
-  let timeString = date.toLocaleTimeString().replace(/:\d+ /, ' ');
-  return timeString;
+  const date = timeToDate(hours);
+  if (date) {
+    return date.toLocaleTimeString().replace(/:\d+ /, ' ');
+  }
+  return null;
 }
 
-export function stringToTime(timeString, twentyFourHour) {
-    return parseInt(timeString.replace(":", ""));
+/**
+ * Convert time from concatenated hours-minutes format to <input type="time">
+ * format.
+ *
+ * A "time" <input> value should be formatted as an RFC3339 partial-time,
+ * according to
+ * http://w3c.github.io/html-reference/input.time.html#input.time.attrs.value
+ *
+ * E.g.
+ * '700' to '7:00'
+ * '1330' to '13:30'
+ */
+export function timeToTimeInputValue(hours) {
+  const date = timeToDate(hours);
+  if (date) {
+    const hour = date.getHours();
+    const strHour = (hour < 10) ? `0${hour.toString()}` : hour.toString();
+    const minute = date.getMinutes();
+    const strMinute = (minute < 10) ? `0${minute.toString()}` : minute.toString();
+    return `${strHour}:${strMinute}`;
+  }
+  return null;
+}
+
+export function stringToTime(timeString) {
+  return parseInt(timeString.replace(':', ''), 10);
 }
 
 export function daysOfTheWeek() {
   return [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday"
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
   ];
 }
 
 export function createTemplateSchedule() {
-    let daysTemplate = [];
-    for(let i = 0; i < daysOfTheWeek().length; i++) {
-        let day = daysOfTheWeek()[i];
-        daysTemplate.push({
-            day: day,
-            opens_at: null,
-            closes_at: null
-        });
-    }
-
-    return daysTemplate;
-}
-
-export function buildHoursText(schedule_days) {
-  if(!schedule_days) {
-    return;
+  const daysTemplate = [];
+  for (let i = 0; i < daysOfTheWeek().length; i += 1) {
+    const day = daysOfTheWeek()[i];
+    daysTemplate.push({
+      day,
+      opens_at: null,
+      closes_at: null,
+    });
   }
 
-  let hours = "";
-  let styles = {
-    cell: true
+  return daysTemplate;
+}
+
+export function buildHoursText(scheduleDays) {
+  if (!scheduleDays) {
+    return '';
+  }
+
+  let hours = '';
+  const styles = {
+    cell: true,
   };
   const currentDate = new Date();
   const currentHour = currentDate.getHours();
+  const currentMinutes = currentDate.getMinutes();
+  const currentTime = (currentHour * 100) + currentMinutes;
 
-  const days = schedule_days.filter(schedule_day => {
-    return (schedule_day && schedule_day.day.replace(/,/g, '') == daysOfTheWeek()[currentDate.getDay()] &&
-        currentHour >= schedule_day.opens_at && currentHour < schedule_day.closes_at);
-  });
+  const days = scheduleDays.filter(scheduleDay =>
+    scheduleDay &&
+    scheduleDay.day.replace(/,/g, '') === daysOfTheWeek()[currentDate.getDay()] &&
+    currentTime >= scheduleDay.opens_at &&
+    currentTime < scheduleDay.closes_at,
+  );
 
-
-
-  if(days.length && days.length > 0) {
-    for(let i = 0; i < days.length; i++) {
-      let day = days[i];
-      if(day.opens_at == 0 && day.closes_at >= 2359) {
-        hours = "Open 24 Hours";
+  if (days.length && days.length > 0) {
+    for (let i = 0; i < days.length; i += 1) {
+      const day = days[i];
+      if (day.opens_at === 0 && day.closes_at >= 2359) {
+        hours = 'Open 24 Hours';
       } else {
-        hours = "Open Now: " + timeToString(day.opens_at) + "-" + timeToString(day.closes_at);
+        hours = `Open Now: ${timeToString(day.opens_at)}-${timeToString(day.closes_at)}`;
       }
-      if(i != days.length - 1) {
-        hours += ", ";
+      if (i !== days.length - 1) {
+        hours += ', ';
       }
     }
   } else {
-    hours = "Closed Now";
+    hours = 'Closed Now';
     styles.closed = true;
   }
 
   return hours;
 }
 
-export function sortScheduleDays(schedule_days) {
-  let days = daysOfTheWeek();
-  return schedule_days.sort(function(a, b) {
-      return a.day != b.day ? days.indexOf(a.day) - days.indexOf(b.day) : a.opens_at - b.opens_at;
-  });
+export function sortScheduleDays(scheduleDays) {
+  const days = daysOfTheWeek();
+  return scheduleDays.sort((a, b) => (
+    a.day !== b.day ? days.indexOf(a.day) - days.indexOf(b.day) : a.opens_at - b.opens_at
+  ));
 }

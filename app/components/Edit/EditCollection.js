@@ -8,7 +8,8 @@ import React, { Component } from 'react';
  */
 export default function editCollectionHOC(ResourceObjectItem,
                             label,
-                            blankTemplateObj
+                            blankTemplateObj,
+                            showAdd=true
                         ) {
     return class EditCollection extends Component {
         constructor(props) {
@@ -60,10 +61,12 @@ export default function editCollectionHOC(ResourceObjectItem,
                     <ul className="edit--section--list--item--sublist">
                         {this.createItemComponents()}
                     </ul>
-                    <button className="edit--section--list--item--button" onClick={this.addItem}>
-                        <i className="material-icons">add_box</i>
-                        Add
-                    </button>
+                    {showAdd &&
+                        <button className="edit--section--list--item--button" onClick={this.addItem}>
+                            <i className="material-icons">add_box</i>
+                            Add
+                        </button>
+                    }
 			    </li>
             );
         }

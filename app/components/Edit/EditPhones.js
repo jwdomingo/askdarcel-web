@@ -42,5 +42,5 @@ class EditPhone extends Component {
     }
 }
 
-const EditPhones = editCollectionHOC(EditPhone, "Phones", {});
+const EditPhones = editCollectionHOC(EditPhone, "Phones", {}, false);
 export default EditPhones;
