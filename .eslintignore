@@ -12,9 +12,7 @@ app/components/Auth/RequireAuth.js
 app/components/Edit/EditAddress.js
 app/components/Edit/EditCollection.js
 app/components/Edit/EditNotes.js
-app/components/Edit/EditPhones.js
 app/components/Edit/EditSchedule.js
-app/components/Edit/EditSections.js
 app/components/Edit/EditServices.js
 app/components/Find/CategoryItem.js
 app/components/Find/FindHeader.js
@@ -23,7 +21,6 @@ app/components/Footer.js
 app/components/Resource/CommunicationBoxes.js
 app/components/Resource/Hours.js
 app/components/Resource/Resource.js
-app/components/Resource/ResourceInfos.js
 app/components/Resource/ResourceMap.js
 app/components/Resource/Services.js
 app/components/Search/ResourcesMap.js
