@@ -127,14 +127,8 @@ function buildPhoneNumber(phones) {
     return;
   }
 
-  let phone = {};
-
-  if(phones.length && phones.length > 0) {
-    phone = phones[0];
-  }
-
-  return (
-    <p>{phone.number}</p>
+  return phones.map((phone) =>
+    <p key={phone.id}>{phone.number} {phone.service_type}</p>
   );
 }
 

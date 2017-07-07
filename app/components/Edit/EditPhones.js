@@ -37,10 +37,17 @@ class EditPhone extends Component {
                     defaultValue={phone.number} 
                     onChange={this.handleFieldChange} 
                 />
+                <input
+                    type="tel"
+                    placeholder="Service type"
+                    data-field="service_type"
+                    defaultValue={phone.service_type}
+                    onChange={this.handleFieldChange}
+                />
             </li>
         );
     }
 }
 
-const EditPhones = editCollectionHOC(EditPhone, "Phones", {}, false);
+const EditPhones = editCollectionHOC(EditPhone, "Phones", {});
 export default EditPhones;

@@ -111,7 +111,7 @@ class EditSections extends React.Component {
         }
 
         //Fire off phone requests
-        this.postCollection(this.state.phones, this.state.resource.phones, 'phones', promises);
+        this.postCollection(this.state.phones, this.state.resource.phones, 'phones', promises, this.state.resource.id);
 
         //schedule
         this.postObject(this.state.scheduleObj, 'schedule_days', promises);
@@ -138,7 +138,7 @@ class EditSections extends React.Component {
 
     }
 
-    postCollection(collection, originalCollection, path, promises) {
+    postCollection(collection, originalCollection, path, promises, resourceID) {
         for(let i = 0; i < collection.length; i++) {
             let item = collection[i];
 
@@ -149,7 +149,8 @@ class EditSections extends React.Component {
                     this.updateCollectionObject(diffObj.obj, item.id, path, promises);
                 }
             } else if(item.dirty) {
-                //post a new object
+                delete item.dirty
+                this.createCollectionObject(item, path, promises, resourceID);
             }
         }
     }
@@ -177,6 +178,18 @@ class EditSections extends React.Component {
                 {change_request: object}
             )
         );
+    }
+
+    /**
+     * Create a change request for a new object
+     */
+    createCollectionObject(object, path, promises, resourceID) {
+        promises.push(
+            dataService.post(
+              '/api/change_requests',
+              {change_request: object, type: path, parent_resource_id: resourceID}
+            )
+        )
     }
 
     postObject(object, path, promises) {

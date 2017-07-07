@@ -151,6 +151,10 @@
 			margin-bottom: calc-em(10px);
 		}
 
+		input:not(last-of-type) {
+			margin-right: calc-em(10px);
+		}
+
 		textarea {
 			height: calc-em(200px);
 		}
@@ -214,6 +218,7 @@
 		label {
 			width: calc-em(150px);
 			color: #333333;
+			flex-shrink: 0;
 			font-size: calc-em(17px);
 			font-weight: bold;
 			padding-top: calc-em(15px);
