@@ -98,33 +98,40 @@ class EditSections extends React.Component {
       address
     } = this.state;
 
-    let newServices = this.prepServicesData(services.services);
+    let schedule = this.prepSchedule(scheduleObj);
+
+    // let newServices = this.prepServicesData(services.services);
     let newResource = {
       name,
       address,
       long_description, 
       email,
       website,
-      services: newServices,
       notes: notes.notes ? this.prepNotesData(notes.notes) : [],
-      schedule: { schedule_days: scheduleObj },
+      schedule: { schedule_days: schedule },
     };
 
-    let requestString = '/api/resource';
-    dataService.post(requestString, { resource: newResource }, getAuthRequestHeaders())
+    let requestString = '/api/resources';
+    dataService.post(requestString, { resources: [newResource] }, getAuthRequestHeaders())
       .then((response) => {
           if (response.ok) {
             alert('Resource successfuly created. Thanks!');
             browserHistory.push('/');
           } else {
             alert('Issue creating resource, please try again.');
-            browserHistory.push('/');
             console.log(logMessage);
           }
         })
   }
 
 
+  prepSchedule(schedule) {
+    let newSchedule = [];
+    for (var day in schedule) {
+     newSchedule.push(schedule[day]);
+    }
+    return newSchedule;
+  }
 
   handleSubmit() {
     this.setState({ submitting: true });
@@ -306,7 +313,7 @@ class EditSections extends React.Component {
     let newNotes = [];
     for (let key in notes) {
       if(notes.hasOwnProperty(key)) {
-        newNotes.push(notes[key].note);
+        newNotes.push({ note: notes[key].note });
       }
     }
     return newNotes;
@@ -488,7 +495,7 @@ class EditSections extends React.Component {
             </header>
             <div className="edit--sections">
                 {this.renderSectionFields()}
-                {this.renderServices()}
+                {this.state.newResource ? null : this.renderServices()}
             </div>
           </div>
           <div className="edit--aside">
@@ -497,7 +504,7 @@ class EditSections extends React.Component {
                 <nav className="edit--aside--content--nav">
                     <ul>
                         <li><a href="#info">Info</a></li>
-                        <li><a href="#services">Services</a></li>
+                        {this.state.newResource ? null : <li><a href="#services">Services</a></li>}
                     </ul>
                 </nav>
               </div>
