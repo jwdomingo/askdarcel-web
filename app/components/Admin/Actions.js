@@ -8,8 +8,8 @@ var Actions = (props) => {
     let changeRequestFields = props.changeRequestFields;
     return (
       <div className="actions request-cell">
-        <i className="material-icons" onClick={() => props.actionHandler(id, rejectAction)}>delete</i>
         <i className="material-icons" onClick={() => props.actionHandler(id, approveAction, changeRequestFields)}>done</i>
+        <i className="material-icons" onClick={() => props.actionHandler(id, rejectAction)}>delete</i>
       </div>
     );
 };

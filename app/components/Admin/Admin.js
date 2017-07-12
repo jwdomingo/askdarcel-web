@@ -11,7 +11,7 @@ class Admin extends React.Component {
     this.state = {
       change_requests: [],
       changeRequestsLoaded: false,
-      pendingServicesLoaded: false
+      pendingServicesLoaded: false,
     };
 
     this.actionHandler = this.actionHandler.bind(this);
@@ -30,7 +30,7 @@ class Admin extends React.Component {
     dataService.get('/api/services/pending', getAuthRequestHeaders()).then((json) => {
       this.setState({
         services: json.services,
-        pendingServicesLoaded: true
+        pendingServicesLoaded: true,
       });
     });
   }
@@ -39,63 +39,69 @@ class Admin extends React.Component {
     dataService.get('/api/change_requests', getAuthRequestHeaders()).then((json) => {
       this.setState({
         change_requests: json.change_requests,
-        changeRequestsLoaded: true
+        changeRequestsLoaded: true,
       });
     });
   }
 
+  bulkActionHandler(action, changeRequests) {
+    return Promise.all(
+      changeRequests.map((changeRequest) => { // Create an action handler for each CR
+        const changeRequestFields = changeRequest.field_changes.reduce((a, c) => {
+          if (a[c.field_name] !== undefined) {
+            console.warn('Discarding duplicate field name in action handler: ', { current: a[c.field_name], duplicate: c });
+            return a;
+          }
+
+          a[c.field_name] = c.field_value;
+          return a;
+        }, {});
+
+        return this.actionHandler(changeRequest.id, action, changeRequestFields);
+      }),
+    );
+  }
+
   actionHandler(id, action, changeRequestFields) {
-    let requestString = action.replace(/{(.*?)}/, id);
+    const requestString = action.replace(/{(.*?)}/, id);
     let removalFunc;
     let logMessage;
-    
+    let body = {};
+
     switch (action) {
       case changeRequestConstants.APPROVE:
+        logMessage = 'Error while trying to approve change request.';
         removalFunc = this.removeChangeRequest;
-        logMessage = "Error while trying to approve change request.";
+        body = { change_request: changeRequestFields };
         break;
       case changeRequestConstants.DELETE:
+        logMessage = 'Error while trying to reject change request.';
         removalFunc = this.removeChangeRequest;
-        logMessage = "Error while trying to reject change request.";
+        body = { change_request: changeRequestFields };
         break;
       case changeRequestConstants.APPROVE_SERVICE:
         removalFunc = this.removeService;
-        logMessage = "Error while trying to approve service";
+        logMessage = 'Error while trying to approve service';
+        body = { service: changeRequestFields };
         break;
       case changeRequestConstants.REJECT_SERVICE:
         removalFunc = this.removeService;
-        logMessage = "Error while trying to reject service";
+        logMessage = 'Error while trying to reject service';
         break;
+      default:
+        throw Error(`Unknown action type: ${action}`);
     }
 
-    if (action == changeRequestConstants.APPROVE) {
-      dataService.post(requestString, { change_request: changeRequestFields }, getAuthRequestHeaders())
-        .then((response) => {
-          if (response.ok) {
-            removalFunc(id);
-          } else {
-            console.log(logMessage);
-          }
-        })
-    } else if (action == changeRequestConstants.APPROVE_SERVICE) {
-      dataService.post(requestString, { service: changeRequestFields }, getAuthRequestHeaders())
-        .then((response) => {
-          if (response.ok) {
-            removalFunc(id);
-          } else {
-            console.log(logMessage);
-          }
-        })
-    } else {
-      dataService.post(requestString, {}, getAuthRequestHeaders())
-        .then((response) => {
-          if (response.ok) {
-            removalFunc(id);
-          } else {
-            console.log(logMessage);
-          }
-        })
-    }
+    return dataService.post(requestString, body, getAuthRequestHeaders())
+
+      .then((response) => {
+        if (response.ok) { return removalFunc(id); }
+        throw Error(logMessage);
+      })
+
+      .catch((err) => {
+        console.log(err);
+      });
   }
 
   removeChangeRequest(changeRequestID) {
@@ -117,6 +123,7 @@ class Admin extends React.Component {
         <ChangeRequests
           changeRequests={this.state.change_requests}
           services={this.state.services}
+          bulkActionHandler={this.bulkActionHandler}
           actionHandler={this.actionHandler} />
       </div>
     )
