@@ -26,10 +26,10 @@ class CategoriesDropdown extends Component {
             });
         });
     }
-
+    
     handleChange(newValues) {
         this.setState({selectedValue: newValues}, () => {
-            this.props.handleCategoryChange(newValues);
+            this.props.handleCategoryChange(newValues.map(val => val.value));
         });
     }
 
