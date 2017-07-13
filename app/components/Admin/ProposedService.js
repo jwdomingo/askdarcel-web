@@ -98,7 +98,7 @@ class ProposedService extends React.Component {
 
   renderCategoryFields() {
     return (
-      <div key={"cat"} className="request-entry">
+      <div className="request-entry">
         <p className="request-cell name">Categories</p>
         <textarea readOnly className="request-cell value" value={this.state.categories} />
       </div>
