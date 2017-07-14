@@ -49,8 +49,8 @@ function postCollection(collection, originalCollection, path, promises, resource
     if (i < originalCollection.length && item.dirty) {
       const diffObj = getDiffObject(item, originalCollection[i]);
       if (!_.isEmpty(diffObj)) {
-        delete diffObj.obj.dirty;
-        updateCollectionObject(diffObj.obj, item.id, path, promises);
+        delete diffObj.dirty;
+        updateCollectionObject(diffObj, item.id, path, promises);
       }
     } else if (item.dirty) {
       delete item.dirty;
