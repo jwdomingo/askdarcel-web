@@ -1,46 +1,68 @@
 import React, { Component } from 'react';
-import editCollectionHOC from './EditCollection';
+import PropTypes from 'prop-types';
 import _ from 'lodash';
+import editCollectionHOC from './EditCollection';
 
 class EditPhone extends Component {
-    constructor(props) {
-        super(props);
+  constructor(props) {
+    super(props);
 
-        this.state = {
-            phone: _.clone(this.props.item)
-        };
+    this.state = {
+      phone: _.clone(this.props.item),
+    };
 
-        this.handleFieldChange = this.handleFieldChange.bind(this);
+    this.handleFieldChange = this.handleFieldChange.bind(this);
+  }
+
+  handleFieldChange(e) {
+    const value = e.target.value;
+    const field = e.target.dataset.field;
+    const phone = this.state.phone;
+
+    if (phone[field] || value !== this.props.item[field]) {
+      phone[field] = value;
+      this.setState({ phone });
+      this.props.handleChange(this.props.index, phone);
     }
+  }
 
-    handleFieldChange(e) {
-        let value = e.target.value;
-        let field = e.target.dataset.field;
-        let phone = this.state.phone;
-
-        if(phone[field] || value != this.props.item[field]) {
-            phone[field] = value;
-            this.setState({phone: phone});
-            this.props.handleChange(this.props.index, phone);
-        }		
-    }
-
-    render() {
-        let phone = this.props.item;
-        return (
-            <li key="tel" className="edit--section--list--item tel">
-                <label>Telephone</label>
-                <input 
-                    type="tel" 
-                    placeholder="Phone number" 
-                    data-field="number" 
-                    defaultValue={phone.number} 
-                    onChange={this.handleFieldChange} 
-                />
-            </li>
-        );
-    }
+  render() {
+    const phone = this.props.item;
+    const htmlID = `phonenumber${this.props.index}`;
+    return (
+      <li key="tel" className="edit--section--list--item tel">
+        <label htmlFor={htmlID}>Telephone</label>
+        <input
+          id={htmlID}
+          type="tel"
+          placeholder="Phone number"
+          data-field="number"
+          defaultValue={phone.number}
+          onChange={this.handleFieldChange}
+        />
+        <input
+          type="tel"
+          placeholder="Service type"
+          data-field="service_type"
+          defaultValue={phone.service_type}
+          onChange={this.handleFieldChange}
+        />
+      </li>
+    );
+  }
 }
 
-const EditPhones = editCollectionHOC(EditPhone, "Phones", {}, false);
+EditPhone.propTypes = {
+  handleChange: PropTypes.func.isRequired,
+  index: PropTypes.number.isRequired,
+  item: PropTypes.shape({
+    country_code: PropTypes.string,
+    extension: PropTypes.string,
+    id: PropTypes.number,
+    number: PropTypes.string,
+    service_type: PropTypes.string,
+  }).isRequired,
+};
+
+const EditPhones = editCollectionHOC(EditPhone, 'Phones', {});
 export default EditPhones;

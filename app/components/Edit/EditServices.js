@@ -3,6 +3,7 @@ import Loader from '../Loader';
 import EditNotes from './EditNotes';
 import EditSchedule from './EditSchedule';
 import { createTemplateSchedule } from '../../utils/index';
+import CategoriesDropdown from './CategoriesDropdown';
 
 class EditServices extends Component {
 	constructor(props) {
@@ -80,6 +81,8 @@ class EditService extends Component {
 		this.handleFieldChange = this.handleFieldChange.bind(this);
 		this.handleNotesChange = this.handleNotesChange.bind(this);
 		this.handleScheduleChange = this.handleScheduleChange.bind(this);
+		this.handleCategoryChange = this.handleCategoryChange.bind(this);
+		this.renderCategories = this.renderCategories.bind(this);
 	}
 
 	handleFieldChange(e) {
@@ -101,6 +104,20 @@ class EditService extends Component {
 		service.scheduleObj = scheduleObj;
 		this.setState({service: service});
 		this.props.handleChange(this.props.service.key, service);
+	}
+
+	handleCategoryChange(categories) {
+		let service = this.state.service;
+		service.categories = categories;
+		this.setState({service: service}, () => {
+			this.props.handleChange(this.props.service.key, service);
+		});
+	}
+
+	renderCategories() {
+		if(this.props.service.key < 0) {
+			return (<CategoriesDropdown handleCategoryChange={this.handleCategoryChange}/>);
+		}
 	}
 
 	render() {
@@ -149,6 +166,12 @@ class EditService extends Component {
 					<EditSchedule schedule={this.props.service.schedule} handleScheduleChange={this.handleScheduleChange} />
 
 					<EditNotes notes={this.props.service.notes} handleNotesChange={this.handleNotesChange} />
+
+					
+					<li className="edit--section--list--item">
+						<label>Categories</label>
+						{this.renderCategories()}
+					</li>
 				</ul>
 			</li>
 		);
