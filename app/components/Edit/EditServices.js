@@ -168,7 +168,10 @@ class EditService extends Component {
 					<EditNotes notes={this.props.service.notes} handleNotesChange={this.handleNotesChange} />
 
 					
-					{this.renderCategories()}
+					<li className="edit--section--list--item">
+						<label>Categories</label>
+						{this.renderCategories()}
+					</li>
 				</ul>
 			</li>
 		);
