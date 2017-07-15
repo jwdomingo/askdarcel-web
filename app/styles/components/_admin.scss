@@ -34,6 +34,13 @@
         cursor: pointer;
         user-select: none;
         padding: 0 $padding-default calc-em(15px);
+
+        span.sub {
+          font-size: 14px;
+          color: $color-textfade;
+          padding: 0 $padding-default;
+        }
+
       }
 
       .expander {

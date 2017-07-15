@@ -3,6 +3,7 @@ import Loader from '../Loader';
 import EditNotes from './EditNotes';
 import EditSchedule from './EditSchedule';
 import { createTemplateSchedule } from '../../utils/index';
+import CategoriesDropdown from './CategoriesDropdown';
 
 class EditServices extends Component {
   constructor(props) {
@@ -72,40 +73,56 @@ class EditServices extends Component {
 }
 
 class EditService extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      service: {}
-    };
-    this.handleFieldChange = this.handleFieldChange.bind(this);
-    this.handleNotesChange = this.handleNotesChange.bind(this);
-    this.handleScheduleChange = this.handleScheduleChange.bind(this);
-  }
+	constructor(props) {
+		super(props);
+		this.state = {
+			service: {}
+		};
+		this.handleFieldChange = this.handleFieldChange.bind(this);
+		this.handleNotesChange = this.handleNotesChange.bind(this);
+		this.handleScheduleChange = this.handleScheduleChange.bind(this);
+		this.handleCategoryChange = this.handleCategoryChange.bind(this);
+		this.renderCategories = this.renderCategories.bind(this);
+	}
 
-  handleFieldChange(e) {
-    let service = this.state.service;
-    service[e.target.dataset.field] = e.target.value;
-    this.setState({ service: service });
-    this.props.handleChange(this.props.service.key, service);
-  }
+	handleFieldChange(e) {
+		let service = this.state.service;
+		service[e.target.dataset.field] = e.target.value;
+		this.setState({service: service});
+		this.props.handleChange(this.props.service.key, service);
+	}
 
-  handleNotesChange(notesObj) {
-    let service = this.state.service;
-    service.notesObj = notesObj;
-    this.setState({ service: service });
-    this.props.handleChange(this.props.service.key, service);
-  }
+	handleNotesChange(notesObj) {
+		let service = this.state.service;
+		service.notesObj = notesObj;
+		this.setState({service: service});
+		this.props.handleChange(this.props.service.key, service);
+	}
 
-  handleScheduleChange(scheduleObj) {
-    let service = this.state.service;
-    service.scheduleObj = scheduleObj;
-    this.setState({ service: service });
-    this.props.handleChange(this.props.service.key, service);
-  }
+	handleScheduleChange(scheduleObj) {
+		let service = this.state.service;
+		service.scheduleObj = scheduleObj;
+		this.setState({service: service});
+		this.props.handleChange(this.props.service.key, service);
+	}
 
-  render() {
-    return (
-      <li className="edit--service edit--section">
+	handleCategoryChange(categories) {
+		let service = this.state.service;
+		service.categories = categories;
+		this.setState({service: service}, () => {
+			this.props.handleChange(this.props.service.key, service);
+		});
+	}
+
+	renderCategories() {
+		if(this.props.service.key < 0) {
+			return (<CategoriesDropdown handleCategoryChange={this.handleCategoryChange}/>);
+		}
+	}
+
+	render() {
+		return (
+			<li className="edit--service edit--section">
 				<header className="edit--section--header">
       		<h4>Service {this.props.index+1}: {this.props.service.name}</h4>
       	</header>
@@ -149,6 +166,12 @@ class EditService extends Component {
 					<EditSchedule schedule={this.props.service.schedule} handleScheduleChange={this.handleScheduleChange} />
 
 					<EditNotes notes={this.props.service.notes} handleNotesChange={this.handleNotesChange} />
+
+					
+					<li className="edit--section--list--item">
+						<label>Categories</label>
+						{this.renderCategories()}
+					</li>
 				</ul>
 			</li>
     );

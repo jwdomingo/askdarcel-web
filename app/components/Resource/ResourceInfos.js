@@ -1,155 +1,175 @@
-import React, { Component } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
+import _ from 'lodash';
 import Hours from './Hours';
-import classNames from 'classnames/bind';
-import { timeToString, stringToTime, daysOfTheWeek, buildHoursText} from '../../utils/index';
 
-class Cat extends Component {
-  render() {
-    return <p>{this.props.category}</p>;
-  }
+function Cat(props) {
+  return <p>{props.category}</p>;
 }
 
-class ResourceCategories extends Component {
-  constructor(props) {
-    super(props);
-  }
+Cat.propTypes = {
+  category: PropTypes.string.isRequired,
+};
 
-  render() {
-    if(this.props.categories.length) {
-      let categoryMap = {};
-      this.props.categories.forEach(category => {
-        categoryMap[category.name] = true;
-      });
 
-      let cats = Object.keys(categoryMap).map((cat, i) =>{
-        return <Cat category={cat} key={i} />
-      });
-      return <span className="categories">{cats}</span>;
-    } else {
-      return null;
-    }
+function ResourceCategories(props) {
+  if (props.categories.length) {
+    const categories = _.uniqBy(props.categories, 'id');
+    const cats = categories.map(cat => <Cat category={cat.name} key={cat.id} />);
+    return <span className="categories">{cats}</span>;
   }
+  return null;
 }
 
-class AddressInfo extends Component {
-  render() {
-    return (
-      <span className="address">
-        {buildLocation(this.props.address)}
-      </span>
-    );
-  }
-}
+ResourceCategories.propTypes = {
+  categories: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    name: PropTypes.string.isRequired,
+  })).isRequired,
+};
 
-class TodaysHours extends Component {
-  render() {
-    return (
-      <Hours schedule={this.props.schedule_days} />
-    );
-  }
-}
-
-class PhoneNumber extends Component {
-  render() {
-    return (
-      <span className="phone">
-        {buildPhoneNumber(this.props.phones)}
-      </span>
-    );
-  }
-}
-
-class Languages extends Component {
-  render() {
-    return (
-      <span className="lang">
-        <p>English, Spanish</p>
-      </span>
-    );
-  }
-}
-
-class Website extends Component {
-  render() {
-    return (
-      <span className="website">
-        <a href={this.props.website} target="_blank">{this.props.website}</a>
-      </span>
-    );
-  }
-}
-
-class StreetView extends Component {
-  render() {
-    return (
-      <div className="org-streetview">
-        <img className="org-streetview--img" src={buildImgURL(this.props.address)} />
-      </div>
-    );
-  }
-}
 
 function buildLocation(address) {
-  let line1 = "";
-  let line2 = "";
+  let line1 = '';
+  let line2 = '';
 
-  if(address) {
-    if(address.address_1) {
+  if (address) {
+    if (address.address_1) {
       line1 += address.address_1;
     }
 
-    if(address.address_2) {
-      line1 += ", " + address.address_2;
+    if (address.address_2) {
+      line1 += `, ${address.address_2}`;
     }
 
-    if(address.city) {
+    if (address.city) {
       line2 += address.city;
     }
 
-    if(address.state_province) {
-      line2 += ", " + address.state_province;
+    if (address.state_province) {
+      line2 += `, ${address.state_province}`;
     }
 
-    if(address.postal_code) {
-      line2 += ", " + address.postal_code;
+    if (address.postal_code) {
+      line2 += `, ${address.postal_code}`;
     }
   }
 
   return (
     <span>
-    {line1}<br />{line2}
+      {line1}<br />{line2}
     </span>
   );
 }
 
-function buildPhoneNumber(phones) {
-  if(!phones) {
-    return;
-  }
-
-  let phone = {};
-
-  if(phones.length && phones.length > 0) {
-    phone = phones[0];
-  }
-
+function AddressInfo(props) {
   return (
-    <p>{phone.number}</p>
+    <span className="address">
+      {buildLocation(props.address)}
+    </span>
   );
 }
 
-function buildImgURL(address) {
-  if(address) {
-     let url = "https://maps.googleapis.com/maps/api/streetview?size=400x400&location=" +
-      address.latitude + "," + address.longitude +
-      "&fov=90&heading=235&pitch=10";
-      if(CONFIG.GOOGLE_API_KEY) {
-        url += '&key=' + CONFIG.GOOGLE_API_KEY;
-      }
-      return url;
-  } else {
-    return "http://lorempixel.com/200/200/city/";
-  }
+const AddressType = PropTypes.shape({
+  address_1: PropTypes.string,
+  address_2: PropTypes.string,
+  city: PropTypes.string,
+  state: PropTypes.string,
+  postal_code: PropTypes.string,
+});
+
+AddressInfo.propTypes = {
+  address: AddressType,
+};
+
+
+function TodaysHours(props) {
+  return (
+    <Hours schedule={props.schedule_days} />
+  );
 }
 
-export {Cat, AddressInfo, TodaysHours, PhoneNumber, ResourceCategories, Website, Languages, StreetView};
+TodaysHours.propTypes = {
+  schedule_days: PropTypes.arrayOf(PropTypes.shape({
+    closes_at: PropTypes.number.isRequired,
+    day: PropTypes.string.isRequired,
+    id: PropTypes.number.isRequired,
+    opens_at: PropTypes.number.isRequired,
+  })),
+};
+
+
+function buildPhoneNumber(phones) {
+  if (!phones) {
+    return null;
+  }
+
+  return phones.map(phone =>
+    <p key={phone.id}>{phone.number} {phone.service_type}</p>,
+  );
+}
+
+function PhoneNumber(props) {
+  return (
+    <span className="phone">
+      {buildPhoneNumber(props.phones)}
+    </span>
+  );
+}
+
+PhoneNumber.propTypes = {
+  phones: PropTypes.arrayOf(PropTypes.shape({
+    country_code: PropTypes.string,
+    extension: PropTypes.string,
+    id: PropTypes.number.isRequired,
+    number: PropTypes.string.isRequired,
+    service_type: PropTypes.string,
+  })).isRequired,
+};
+
+
+function Website(props) {
+  return (
+    <span className="website">
+      <a href={props.website} target="_blank" rel="noopener noreferrer">{props.website}</a>
+    </span>
+  );
+}
+
+Website.propTypes = {
+  website: PropTypes.string,
+};
+
+
+function buildImgURL(address) {
+  if (address) {
+    let url = `https://maps.googleapis.com/maps/api/streetview?size=400x400&location=${address.latitude},${address.longitude}&fov=90&heading=235&pitch=10`;
+    // Ignore undefined CONFIG because it gets injected by extended-define-webpack-plugin
+    /* eslint-disable no-undef */
+    if (CONFIG.GOOGLE_API_KEY) {
+      url += `&key=${CONFIG.GOOGLE_API_KEY}`;
+    }
+    /* eslint-enable no-undef */
+    return url;
+  }
+  return 'http://lorempixel.com/200/200/city/';
+}
+
+function StreetView(props) {
+  return (
+    <div className="org-streetview">
+      <img
+        className="org-streetview--img"
+        src={buildImgURL(props.address)}
+        alt={`Street view of ${props.resourceName}`}
+      />
+    </div>
+  );
+}
+
+StreetView.propTypes = {
+  address: AddressType,
+  resourceName: PropTypes.string.isRequired,
+};
+
+export { Cat, AddressInfo, TodaysHours, PhoneNumber, ResourceCategories, Website, StreetView };

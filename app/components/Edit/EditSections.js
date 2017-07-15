@@ -1,7 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router';
-import { browserHistory } from 'react-router'
-import { images } from '../../assets';
+import PropTypes from 'prop-types';
+import { withRouter } from 'react-router';
+import _ from 'lodash';
+
 import Loader from '../Loader';
 import EditAddress from './EditAddress';
 import EditServices from './EditServices';
@@ -12,7 +13,6 @@ import * as dataService from '../../utils/DataService';
 import { getAuthRequestHeaders } from '../../utils/index';
 import { withRouter } from 'react-router';
 import { daysOfTheWeek } from '../../utils/index';
-import _ from 'lodash';
 
 class EditSections extends React.Component {
 
@@ -53,8 +53,14 @@ class EditSections extends React.Component {
       if (object.hasOwnProperty(key)) {
         return true;
       }
+function getDiffObject(curr, orig) {
+  return Object.entries(curr).reduce((acc, [key, value]) => {
+    if (!_.isEqual(orig[key], value)) {
+      acc[key] = value;
     }
-
+    return acc;
+  }, {});
+}
     return false;
   }
 
@@ -169,7 +175,8 @@ class EditSections extends React.Component {
     if (resourceModified) {
       promises.push(dataService.post('/api/resources/' + resource.id + '/change_requests', { change_request: resourceChangeRequest }));
     }
-
+  }
+}
     //Fire off phone requests
     this.postCollection(this.state.phones, this.state.resource.phones, 'phones', promises);
 
@@ -386,21 +393,20 @@ class EditSections extends React.Component {
       }
     }
   }
-
   handlePhoneChange(phoneCollection) {
     this.setState({ phones: phoneCollection });
   }
 
   handleResourceFieldChange(e) {
-    let field = e.target.dataset.field;
-    let value = e.target.value;
-    let object = {};
+    const field = e.target.dataset.field;
+    const value = e.target.value;
+    const object = {};
     object[field] = value;
     this.setState(object);
   }
 
   handleScheduleChange(scheduleObj) {
-    this.setState({ scheduleObj: scheduleObj });
+    this.setState({ scheduleObj });
   }
 
   handleAddressChange(addressObj) {
@@ -421,49 +427,84 @@ class EditSections extends React.Component {
 
   formatTime(time) {
     //FIXME: Use full times once db holds such values.
-    return time.substring(0, 2);
+    return time.substring(0, 2); 
   }
-
   renderSectionFields() {
-    let fields = [];
-    let resource = this.state.resource;
+    const resource = this.state.resource;
     return (
       <section id="info" className="edit--section">
-            <header className="edit--section--header">
-                <h4>Info</h4>
-            </header>
-          <ul className="edit--section--list">
+        <header className="edit--section--header">
+          <h4>Info</h4>
+        </header>
+        <ul className="edit--section--list">
 
-            <li key="name" className="edit--section--list--item">
-                <label>Name</label>
-                <input type="text" placeholder="Name" data-field='name' defaultValue={resource.name} onChange={this.handleResourceFieldChange} />
-            </li>
+          <li key="name" className="edit--section--list--item">
+            <label htmlFor="edit-name-input">Name</label>
+            <input
+              id="edit-name-input"
+              type="text"
+              placeholder="Name"
+              data-field="name"
+              defaultValue={resource.name}
+              onChange={this.handleResourceFieldChange}
+            />
+          </li>
 
-            <EditAddress address={this.state.resource.address} updateAddress={this.handleAddressChange}/>
+          <EditAddress
+            address={this.state.resource.address}
+            updateAddress={this.handleAddressChange}
+          />
 
-            <EditPhones collection={this.state.resource.phones} handleChange={this.handlePhoneChange} />
+          <EditPhones
+            collection={this.state.resource.phones}
+            handleChange={this.handlePhoneChange}
+          />
 
-            <li key="website" className="edit--section--list--item email">
-                <label>Website</label>
-                <input type="url" defaultValue={resource.website} data-field='website' onChange={this.handleResourceFieldChange}/>
-            </li>
+          <li key="website" className="edit--section--list--item email">
+            <label htmlFor="edit-website-input">Website</label>
+            <input
+              id="edit-website-input"
+              type="url"
+              defaultValue={resource.website}
+              data-field="website"
+              onChange={this.handleResourceFieldChange}
+            />
+          </li>
 
-            <li key="email" className="edit--section--list--item email">
-                <label>E-Mail</label>
-                <input type="url" defaultValue={resource.email} data-field='email' onChange={this.handleResourceFieldChange}/>
-            </li>
+          <li key="email" className="edit--section--list--item email">
+            <label htmlFor="edit-email-input">E-Mail</label>
+            <input
+              id="edit-email-input"
+              type="email"
+              defaultValue={resource.email}
+              data-field="email"
+              onChange={this.handleResourceFieldChange}
+            />
+          </li>
 
-            <li key="long_description" className="edit--section--list--item">
-                <label>Description</label>
-                <textarea className="" defaultValue={resource.long_description} data-field='long_description' onChange={this.handleResourceFieldChange} />
-            </li>
+          <li key="long_description" className="edit--section--list--item">
+            <label htmlFor="edit-description-input">Description</label>
+            <textarea
+              id="edit-description-input"
+              className=""
+              defaultValue={resource.long_description}
+              data-field="long_description"
+              onChange={this.handleResourceFieldChange}
+            />
+          </li>
 
-            <EditSchedule schedule={this.state.resource.schedule} handleScheduleChange={this.handleScheduleChange} />
+          <EditSchedule
+            schedule={this.state.resource.schedule}
+            handleScheduleChange={this.handleScheduleChange}
+          />
 
-            <EditNotes notes={this.state.resource.notes} handleNotesChange={this.handleNotesChange} />
+          <EditNotes
+            notes={this.state.resource.notes}
+            handleNotesChange={this.handleNotesChange}
+          />
 
-          </ul>
-        </section>
+        </ul>
+      </section>
     );
   }
 
@@ -520,5 +561,17 @@ function isEmpty(map) {
   }
   return true;
 }
+
+EditSections.propTypes = {
+  // TODO: location is only ever used to get the resourceid; we should just pass
+  // in the resourceid directly as a prop
+  location: PropTypes.shape({
+    query: PropTypes.shape({
+      resourceid: PropTypes.string.isRequired,
+    }).isRequired,
+  }).isRequired,
+  // TODO: Figure out what type router actually is
+  router: PropTypes.instanceOf(Object).isRequired,
+};
 
 export default withRouter(EditSections);

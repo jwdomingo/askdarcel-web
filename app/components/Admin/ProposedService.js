@@ -8,10 +8,11 @@ class ProposedService extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = { schedule: {}, serviceFields: {}, notes: {}, schedule: {} };
+    this.state = { schedule: {}, serviceFields: {}, notes: {}, categories: [] };
     this.renderNotesFields = this.renderNotesFields.bind(this);
     this.renderScheduleFields = this.renderScheduleFields.bind(this);
     this.renderAdditionalFields = this.renderAdditionalFields.bind(this);
+    this.renderCategoryFields = this.renderCategoryFields.bind(this);
     this.changeScheduleValue = this.changeScheduleValue.bind(this);
     this.changeNoteValue = this.changeNoteValue.bind(this);
     this.changeServiceValue = this.changeServiceValue.bind(this);
@@ -22,6 +23,7 @@ class ProposedService extends React.Component {
     let newServiceFields = this.state.serviceFields;
     let tempNotes = this.state.notes;
     let tempSchedule = this.state.schedule;
+    let tempCategories = this.state.categories;
 
     for (let field in tempService) {
       if (tempService.hasOwnProperty(field) && field !== 'id' && field !== 'resource') {
@@ -37,12 +39,19 @@ class ProposedService extends React.Component {
           scheduleDays.forEach((day, i) => {
             tempSchedule[i] = { day: day.day, opens_at: day.opens_at, closes_at: day.closes_at }
           })
+        } else if (field === "categories") {
+          tempCategories = tempService[field].map(category => category.name);
         } else {
           newServiceFields[field] = tempService[field];
         }
       }
     }
-    this.setState({ serviceFields: newServiceFields, notes: tempNotes, schedule: tempSchedule });
+    this.setState({ 
+      serviceFields: newServiceFields, 
+      notes: tempNotes, 
+      schedule: tempSchedule, 
+      categories: tempCategories 
+    });
   }
 
 
@@ -86,6 +95,16 @@ class ProposedService extends React.Component {
     }
     return scheduleOutput;
   }
+
+  renderCategoryFields() {
+    return (
+      <div className="request-entry">
+        <p className="request-cell name">Categories</p>
+        <textarea readOnly className="request-cell value" value={this.state.categories} />
+      </div>
+    );
+  }
+
   renderNotesFields() {
     let { notes } = this.state;
     let notesOutput = [];
@@ -119,9 +138,11 @@ class ProposedService extends React.Component {
     return (
       <div className="change-log">
         <div className="request-fields">
+          {this.renderAdditionalFields()}
+          {this.renderCategoryFields()}
           {this.renderNotesFields()}
           {this.renderScheduleFields()}
-          {this.renderAdditionalFields()}
+          
         </div>
         <Actions
             id={this.props.service.id}

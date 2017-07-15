@@ -1,6 +1,6 @@
 
 import React, { Component } from 'react';
-import {AddressInfo, TodaysHours, PhoneNumber, WeeklyHours, ResourceCategories, Website, Languages, StreetView} from './ResourceInfos';
+import {AddressInfo, TodaysHours, PhoneNumber, WeeklyHours, ResourceCategories, Website, StreetView} from './ResourceInfos';
 import DetailedHours from './DetailedHours';
 import CommunicationBoxes from './CommunicationBoxes';
 import Services from './Services';
@@ -36,7 +36,7 @@ class Resource extends Component {
         <article className="org" id="resource">
 	        <div className="org--map">
 	          <ResourceMap name={resource.name} lat={ resource.address.latitude} long={resource.address.longitude} userLocation={this.props.userLocation} />
-	          <StreetView address={resource.address} />
+	          <StreetView address={resource.address} resourceName={resource.name} />
 	        </div>
 	        <div className="org--main">
 						<div className="org--main--left">

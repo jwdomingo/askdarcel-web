@@ -122,6 +122,7 @@ class ChangeRequests extends React.Component {
         <div key={resourceID} className={`group-container ${collapsed}`}>
           <h2 onClick={() => this.toggleCollapsed(resourceID)}>
             {resourceObjects[resourceID].name}
+            <span className={`sub`}>#{resourceID}</span>
             <span className={`material-icons expander ${collapsed} right`}>expand_less</span>
           </h2>
           <div className={`group-content ${collapsed}`}>

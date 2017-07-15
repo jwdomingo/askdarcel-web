@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Navigation from './Navigation';
 import CategoryPage from './Find/FindPage';
 import ResourcesTable from './Search/ResourcesTable';
+import 'react-select/dist/react-select.css';
 
 
 class App extends Component {
