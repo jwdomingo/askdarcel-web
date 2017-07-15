@@ -11,7 +11,6 @@ import EditSchedule from './EditSchedule';
 import EditPhones from './EditPhones';
 import * as dataService from '../../utils/DataService';
 import { getAuthRequestHeaders } from '../../utils/index';
-import { withRouter } from 'react-router';
 import { daysOfTheWeek } from '../../utils/index';
 
 class EditSections extends React.Component {
@@ -45,23 +44,6 @@ class EditSections extends React.Component {
     this.postSchedule = this.postSchedule.bind(this);
     this.createResource = this.createResource.bind(this);
     this.prepServicesData = this.prepServicesData.bind(this);
-  }
-
-  hasKeys(object) {
-    let size = 0;
-    for (let key in object) {
-      if (object.hasOwnProperty(key)) {
-        return true;
-      }
-function getDiffObject(curr, orig) {
-  return Object.entries(curr).reduce((acc, [key, value]) => {
-    if (!_.isEqual(orig[key], value)) {
-      acc[key] = value;
-    }
-    return acc;
-  }, {});
-}
-    return false;
   }
 
   componentDidMount() {
@@ -110,7 +92,7 @@ function getDiffObject(curr, orig) {
     let newResource = {
       name,
       address,
-      long_description, 
+      long_description,
       email,
       website,
       notes: notes.notes ? this.prepNotesData(notes.notes) : [],
@@ -120,21 +102,30 @@ function getDiffObject(curr, orig) {
     let requestString = '/api/resources';
     dataService.post(requestString, { resources: [newResource] }, getAuthRequestHeaders())
       .then((response) => {
-          if (response.ok) {
-            alert('Resource successfuly created. Thanks!');
-            browserHistory.push('/');
-          } else {
-            alert('Issue creating resource, please try again.');
-            console.log(logMessage);
-          }
-        })
+        if (response.ok) {
+          alert('Resource successfuly created. Thanks!');
+          browserHistory.push('/');
+        } else {
+          alert('Issue creating resource, please try again.');
+          console.log(logMessage);
+        }
+      })
   }
 
 
+  hasKeys(object) {
+    let size = 0;
+    for (let key in object) {
+      if (object.hasOwnProperty(key)) {
+        return true;
+      }
+      return false;
+    }
+  }
   prepSchedule(schedule) {
     let newSchedule = [];
     for (var day in schedule) {
-     newSchedule.push(schedule[day]);
+      newSchedule.push(schedule[day]);
     }
     return newSchedule;
   }
@@ -175,8 +166,7 @@ function getDiffObject(curr, orig) {
     if (resourceModified) {
       promises.push(dataService.post('/api/resources/' + resource.id + '/change_requests', { change_request: resourceChangeRequest }));
     }
-  }
-}
+
     //Fire off phone requests
     this.postCollection(this.state.phones, this.state.resource.phones, 'phones', promises);
 
@@ -319,7 +309,7 @@ function getDiffObject(curr, orig) {
   prepNotesData(notes) {
     let newNotes = [];
     for (let key in notes) {
-      if(notes.hasOwnProperty(key)) {
+      if (notes.hasOwnProperty(key)) {
         newNotes.push({ note: notes[key].note });
       }
     }
@@ -427,7 +417,7 @@ function getDiffObject(curr, orig) {
 
   formatTime(time) {
     //FIXME: Use full times once db holds such values.
-    return time.substring(0, 2); 
+    return time.substring(0, 2);
   }
   renderSectionFields() {
     const resource = this.state.resource;
@@ -562,12 +552,21 @@ function isEmpty(map) {
   return true;
 }
 
+function getDiffObject(curr, orig) {
+  return Object.entries(curr).reduce((acc, [key, value]) => {
+    if (!_.isEqual(orig[key], value)) {
+      acc[key] = value;
+    }
+    return acc;
+  }, {});
+}
+
 EditSections.propTypes = {
   // TODO: location is only ever used to get the resourceid; we should just pass
   // in the resourceid directly as a prop
   location: PropTypes.shape({
     query: PropTypes.shape({
-      resourceid: PropTypes.string.isRequired,
+      resourceid: PropTypes.string,
     }).isRequired,
   }).isRequired,
   // TODO: Figure out what type router actually is
