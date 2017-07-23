@@ -6,70 +6,70 @@ import { createTemplateSchedule } from '../../utils/index';
 import CategoriesDropdown from './CategoriesDropdown';
 
 class EditServices extends Component {
-	constructor(props) {
-		super(props);
+  constructor(props) {
+    super(props);
 
-		this.state = {
-			services: {},
-			existingServices: props.services.map((service) => {
-				let newService = service;
-				newService.key = service.id;
-				return newService;
-			}),
-			uuid: -1
-		};
+    this.state = {
+      services: {},
+      existingServices: props.services ? props.services.map((service) => {
+        let newService = service;
+        newService.key = service.id;
+        return newService;
+      }) : [],
+      uuid: -1
+    };
 
-		this.renderServices = this.renderServices.bind(this);
-		this.handleServiceChange = this.handleServiceChange.bind(this);
-		this.addService = this.addService.bind(this);
-	}
+    this.renderServices = this.renderServices.bind(this);
+    this.handleServiceChange = this.handleServiceChange.bind(this);
+    this.addService = this.addService.bind(this);
+  }
 
-	handleServiceChange(key, service) {
-		let services = this.state.services;
-		services[key] = service;
-		this.setState({
-			services: services
-		}, function() {
-			this.props.handleServiceChange(this.state);
-		});
-	}
+  handleServiceChange(key, service) {
+    let services = this.state.services;
+    services[key] = service;
+    this.setState({
+      services: services
+    }, function() {
+      this.props.handleServiceChange(this.state);
+    });
+  }
 
-	addService() {
-		let existingServices = this.state.existingServices;
-		let newUUID = this.state.uuid-1;
-		existingServices.unshift({
-			key: newUUID,
-			notes: [],
-			schedule: {
-				schedule_days: createTemplateSchedule()
-			}
-		});
-		this.setState({existingServices: existingServices, uuid: newUUID});
-	}
+  addService() {
+    let existingServices = this.state.existingServices;
+    let newUUID = this.state.uuid - 1;
+    existingServices.unshift({
+      key: newUUID,
+      notes: [],
+      schedule: {
+        schedule_days: createTemplateSchedule()
+      }
+    });
+    this.setState({ existingServices: existingServices, uuid: newUUID });
+  }
 
-	renderServices() {
-		let servicesArray = [];
+  renderServices() {
+    let servicesArray = [];
 
-		for(let i = 0; i < this.state.existingServices.length; i++) {
-			let service = this.state.existingServices[i];
-			servicesArray.push(
-				<EditService key={service.key} index={i} service={service} handleChange={this.handleServiceChange} />
-			);
-		}
+    for (let i = 0; i < this.state.existingServices.length; i++) {
+      let service = this.state.existingServices[i];
+      servicesArray.push(
+        <EditService key={service.key} index={i} service={service} handleChange={this.handleServiceChange} />
+      );
+    }
 
-		return servicesArray;
-	}
+    return servicesArray;
+  }
 
-	render() {
-		return (
-			<li className="edit--section--list--item">
+  render() {
+    return (
+      <li className="edit--section--list--item">
 			<button className="edit--section--list--item--button" onClick={this.addService}><i className="material-icons">add_box</i>Add Service</button>
 				<ul className="edit--section--list--item--sublist edit--service--list">
 					{this.renderServices()}
 				</ul>
 			</li>
-		);
-	}
+    );
+  }
 }
 
 class EditService extends Component {
@@ -174,8 +174,8 @@ class EditService extends Component {
 					</li>
 				</ul>
 			</li>
-		);
-	}
+    );
+  }
 }
 
 export default EditServices;

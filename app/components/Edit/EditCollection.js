@@ -16,7 +16,7 @@ export default function editCollectionHOC(ResourceObjectItem,
             super(props);
 
             this.state = {
-                collection: this.props.collection.slice()
+                collection: this.props.collection ? this.props.collection.slice() : [],
             }
 
             this.addItem = this.addItem.bind(this);

@@ -91,6 +91,7 @@ export function createTemplateSchedule() {
       day,
       opens_at: null,
       closes_at: null,
+      id: i + 1,
     });
   }
 
