@@ -298,6 +298,7 @@ class EditSections extends React.Component {
             <input
               id="edit-name-input"
               type="text"
+              className="input"
               placeholder="Name"
               data-field="name"
               defaultValue={resource.name}
@@ -320,6 +321,7 @@ class EditSections extends React.Component {
             <input
               id="edit-website-input"
               type="url"
+              className="input"
               defaultValue={resource.website}
               data-field="website"
               onChange={this.handleResourceFieldChange}
@@ -331,6 +333,7 @@ class EditSections extends React.Component {
             <input
               id="edit-email-input"
               type="email"
+              className="input"
               defaultValue={resource.email}
               data-field="email"
               onChange={this.handleResourceFieldChange}
@@ -341,7 +344,7 @@ class EditSections extends React.Component {
             <label htmlFor="edit-description-input">Description</label>
             <textarea
               id="edit-description-input"
-              className=""
+              className="input"
               defaultValue={resource.long_description}
               data-field="long_description"
               onChange={this.handleResourceFieldChange}

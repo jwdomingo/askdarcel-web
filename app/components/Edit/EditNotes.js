@@ -84,7 +84,7 @@ class EditNote extends Component {
 		return (
 			<li>
 				<label>Note {this.props.index+1}</label>
-				<textarea className="large-input" placeholder='Note' defaultValue={this.props.note.note} onChange={this.handleFieldChange} />
+				<textarea className="large-input input" placeholder='Note' defaultValue={this.props.note.note} onChange={this.handleFieldChange} />
 			</li>
 		);
 	}

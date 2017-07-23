@@ -33,12 +33,16 @@ class CategoriesDropdown extends Component {
 
   render() {
     return (
-      <Select
-        multi
-        value={this.state.selectedValues}
-        options={this.state.options}
-        onChange={this.handleChange}
-      />
+      <li className="edit--section--list--item">
+        <label htmlFor="categoryDropdown">Categories</label>
+        <Select
+          id="categoryDropdown"
+          multi
+          value={this.state.selectedValues}
+          options={this.state.options}
+          onChange={this.handleChange}
+        />
+      </li>
     );
   }
 }
