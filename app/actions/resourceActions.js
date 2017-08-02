@@ -1,5 +1,4 @@
 export default {
-  addResource(resource) {
-    console.log('resource', resource);
+  addResource(resource) { 
   }
-}
+};

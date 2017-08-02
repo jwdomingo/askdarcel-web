@@ -36,3 +36,16 @@ app/store/configureStore.js
 app/store/configureStore.prod.js
 app/utils/DataService.js
 app/utils/google.js
+app/actions/resourceActions.js
+app/components/Edit/EditAddress.js
+app/components/Edit/EditCollection.js
+app/components/Edit/EditNotes.js
+app/components/Edit/EditSchedule.js
+app/components/Edit/EditSections.js
+app/components/Edit/EditServices.js
+app/components/Search/ResourcesTable.js
+app/reducers/formConfig.js
+app/reducers/index.js
+app/routes.jsx
+app/store/*
+app/utils/index.js
