@@ -23,8 +23,10 @@ app/components/Resource/Hours.js
 app/components/Resource/Resource.js
 app/components/Resource/ResourceMap.js
 app/components/Resource/Services.js
+app/components/Resource/DetailedHours.js
 app/components/Search/ResourcesMap.js
 app/components/Search/ResourcesTable.js
+app/components/Search/ResourcesRow.js
 app/components/User/CreateAccount.js
 app/components/User/Login.js
 app/components/User/Splash.js
