@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { withRouter } from 'react-router';
+import { withRouter, browserHistory } from 'react-router';
 import _ from 'lodash';
 
 import Loader from '../Loader';
@@ -245,11 +245,18 @@ class EditSections extends React.Component {
       return false;
     }
   }
-  prepSchedule(schedule) {
+  prepSchedule(scheduleObj) {
     let newSchedule = [];
-    for (var day in schedule) {
-      newSchedule.push(schedule[day]);
-    }
+    let tempDay = {};
+    Object.keys(scheduleObj).forEach(day => {
+      scheduleObj[day].forEach(curr => {
+        tempDay = {};
+        tempDay.day = day;
+        tempDay.opens_at = curr.opens_at;
+        tempDay.closes_at = curr.closes_at;
+        newSchedule.push(tempDay);
+      });
+    });
     return newSchedule;
   }
 

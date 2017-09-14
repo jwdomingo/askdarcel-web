@@ -22,9 +22,8 @@ function buildSchedule(schedule) {
       curr.closeChanged=false;
       currSchedule[curr.day] ? currSchedule[curr.day].unshift(curr) : currSchedule[curr.day] = [curr];
     });
-
-    finalSchedule = Object.assign({}, tempSchedule, currSchedule);
   }
+  finalSchedule = Object.assign({}, tempSchedule, currSchedule);
   return finalSchedule;
 }
 
