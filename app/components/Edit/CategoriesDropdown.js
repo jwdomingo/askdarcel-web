@@ -2,12 +2,19 @@ import React, { Component, PropTypes } from 'react';
 import Select from 'react-select';
 import * as dataService from '../../utils/DataService';
 
+function categoryToSelectValue(category) {
+  return {
+    label: category.name,
+    value: category,
+  };
+}
+
 class CategoriesDropdown extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      selectedValues: [],
+      selectedValues: props.categories.map(categoryToSelectValue),
       options: [],
     };
 
@@ -17,10 +24,7 @@ class CategoriesDropdown extends Component {
   componentDidMount() {
     dataService.get('/api/categories').then((json) => {
       this.setState({
-        options: json.categories.map(category => ({
-          label: category.name,
-          value: category,
-        })),
+        options: json.categories.map(categoryToSelectValue),
       });
     });
   }
@@ -48,6 +52,12 @@ class CategoriesDropdown extends Component {
 }
 
 CategoriesDropdown.propTypes = {
+  categories: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      name: PropTypes.string.isRequired,
+    }).isRequired,
+  ).isRequired,
   handleCategoryChange: PropTypes.func.isRequired,
 };
 
