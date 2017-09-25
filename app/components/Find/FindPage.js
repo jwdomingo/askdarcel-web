@@ -19,7 +19,7 @@ var CategoryBox = React.createClass({
       }
     }.bind(this);
 
-    var tempUrl = '/api/categories';
+    var tempUrl = '/api/categories?top_level=true';
     var httpRequest = new XMLHttpRequest();
     httpRequest.open('GET', tempUrl, true);
     httpRequest.onreadystatechange = callback;

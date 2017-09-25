@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Link } from 'react-router';
 import Rating from './Rating'
 import { timeToString, stringToTime, daysOfTheWeek } from '../../utils/index';
-
+import moment from 'moment';
 
 class ResourcesRow extends Component {
   constructor(props) {
@@ -40,7 +40,7 @@ class ResourcesRow extends Component {
     let date = new Date();
     let day = date.getDay();
     let days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    let hour = date.getHours();
+    let currTime = moment().format("HH:mm").replace(':', '');
     let closingOpeningTimes = {};
     let currDay = days[day];
     let result = { open: false };
@@ -52,7 +52,8 @@ class ResourcesRow extends Component {
       };
     });
 
-    if(closingOpeningTimes[currDay] && hour < closingOpeningTimes[currDay].close) {
+
+    if(closingOpeningTimes[currDay] && currTime < closingOpeningTimes[currDay].close) {
       return {
         open:true,
         time: timeToString(closingOpeningTimes[currDay].close)

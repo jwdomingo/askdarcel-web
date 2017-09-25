@@ -14,13 +14,15 @@ export default function DetailedHours(props) {
         </div>
       );
     }
-    return (
-      <div key={item.id} className="weekly-hours-list--item">
-        <span className="weekly-hours-list--item--day">{`${item.day}`}</span>
-        <span className="weekly-hours-list--item--hours">{`${timeToString(item.opens_at)} - ${timeToString(item.closes_at)}`}
-        </span>
-      </div>
-    );
+    if (item.opens_at !== null && item.closes_at !== null) {
+      return (
+        <div key={item.id} className="weekly-hours-list--item">
+          <span className="weekly-hours-list--item--day">{`${item.day}`}</span>
+          <span className="weekly-hours-list--item--hours">{`${timeToString(item.opens_at)} - ${timeToString(item.closes_at)}`}
+          </span>
+        </div>
+      );
+    }
   });
   return (
     <span className="weekly-hours-list">

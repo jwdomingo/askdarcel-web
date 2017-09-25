@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { withRouter } from 'react-router';
+import { withRouter, browserHistory } from 'react-router';
 import _ from 'lodash';
 
 import Loader from '../Loader';
@@ -10,6 +10,7 @@ import EditNotes from './EditNotes';
 import EditSchedule from './EditSchedule';
 import EditPhones from './EditPhones';
 import * as dataService from '../../utils/DataService';
+import { getAuthRequestHeaders } from '../../utils/index';
 import { daysOfTheWeek } from '../../utils/index';
 
 function getDiffObject(curr, orig) {
@@ -59,16 +60,49 @@ function postCollection(collection, originalCollection, path, promises, resource
   }
 }
 
-function postObject(object, path, promises) {
-  Object.entries(object).forEach(([key, value]) => {
-    promises.push(dataService.post(`/api/${path}/${key}/change_requests`, { change_request: value }));
-  });
-}
-
 function postSchedule(scheduleObj, promises) {
-  if (scheduleObj) {
-    postObject(scheduleObj, 'schedule_days', promises);
+  if (!scheduleObj) {
+    return;
   }
+  let currDay = [];
+  let value = {};
+  Object.keys(scheduleObj).forEach((day) => {
+    currDay = scheduleObj[day];
+    currDay.forEach((curr) => {
+      value = {};
+      if (curr.id) {
+        if (!curr.openChanged && !curr.closeChanged) {
+          return;
+        }
+        if (curr.openChanged) {
+          value.opens_at = curr.opens_at;
+        }
+        if (curr.closeChanged) {
+          value.closes_at = curr.closes_at;
+        }
+
+        promises.push(dataService.post(`/api/schedule_days/${curr.id}/change_requests`, { change_request: value }));
+      } else {
+        value = {
+          change_request: {
+            day,
+          },
+          type: 'schedule_days',
+          schedule_id: curr.scheduleId,
+        };
+        if (curr.openChanged) {
+          value.change_request.opens_at = curr.opens_at;
+        }
+        if (curr.closeChanged) {
+          value.change_request.closes_at = curr.closes_at;
+        }
+        if (!curr.openChanged && !curr.closeChanged) {
+          return;
+        }
+        promises.push(dataService.post(`/api/change_requests`, { ...value }));
+      }
+    });
+  });
 }
 
 function postNotes(notesObj, promises, uriObj) {
@@ -87,25 +121,20 @@ function postNotes(notesObj, promises, uriObj) {
 }
 
 function createFullSchedule(scheduleObj) {
-  const daysTemplate = {};
-  for (let i = 0; i < daysOfTheWeek().length; i += 1) {
-    const day = daysOfTheWeek()[i];
-    daysTemplate[day] = {
-      day,
-      opens_at: null,
-      closes_at: null,
-    };
-  }
 
-  if (scheduleObj) {
-    Object.values(scheduleObj).forEach((scheduleDay) => {
-      Object.entries(scheduleDay).forEach(([dayKey, schedule]) => {
-        daysTemplate[scheduleDay.day][dayKey] = schedule;
-      });
+  let newSchedule = [];
+  let tempDay = {};
+  Object.keys(scheduleObj).forEach(day => {
+    scheduleObj[day].forEach(curr => {
+      tempDay = {};
+      tempDay.day = day;
+      tempDay.opens_at = curr.opens_at;
+      tempDay.closes_at = curr.closes_at;
+      newSchedule.push(tempDay);
     });
-  }
+  });
 
-  return { schedule_days: Object.values(daysTemplate) };
+  return { schedule_days: newSchedule };
 }
 
 class EditSections extends React.Component {
@@ -118,11 +147,12 @@ class EditSections extends React.Component {
       schedule_days: {},
       resourceFields: {},
       serviceFields: {},
-      addressFields: {},
+      address: {},
       services: {},
       notes: {},
       phones: [],
       submitting: false,
+      newResource: false,
     };
 
     this.handleResourceFieldChange = this.handleResourceFieldChange.bind(this);
@@ -133,33 +163,110 @@ class EditSections extends React.Component {
     this.handleNotesChange = this.handleNotesChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.postServices = this.postServices.bind(this);
+    this.postNotes = this.postNotes.bind(this);
+    this.postSchedule = this.postSchedule.bind(this);
+    this.createResource = this.createResource.bind(this);
+    this.prepServicesData = this.prepServicesData.bind(this);
   }
 
   componentDidMount() {
-    const resourceID = this.props.location.query.resourceid;
-    const url = `/api/resources/${resourceID}`;
-    fetch(url).then(r => r.json())
-      .then((data) => {
-        this.setState({
-          resource: data.resource,
-          originalResource: data.resource,
-        });
+    let { query, pathname } = this.props.location;
+    let splitPath = pathname.split('/');
+    if (splitPath[splitPath.length - 1] === 'new') {
+      this.setState({ newResource: true, resource: {}, originalResource: {}, scheduleMap: {} });
+    }
+    let resourceID = query.resourceid;
+    if (resourceID) {
+      let url = '/api/resources/' + resourceID;
+      fetch(url).then(r => r.json())
+        .then(data => {
+          this.setState({
+            resource: data.resource,
+            originalResource: data.resource,
+          });
 
-        const scheduleMap = {};
-        data.resource.schedule.schedule_days.forEach((day) => {
-          scheduleMap[day.day] = day;
+          let scheduleMap = {};
+          data.resource && data.resource.schedule && data.resource.schedule.schedule_days.forEach(function(day) {
+            scheduleMap[day.day] = day;
+          });
+          this.setState({ scheduleMap: scheduleMap });
         });
-        this.setState({ scheduleMap });
+    }
+  }
+
+  createResource() {
+    let {
+      scheduleObj,
+      notes,
+      phones,
+      services,
+      resourceFields,
+      name,
+      long_description,
+      short_description,
+      website,
+      email,
+      address
+    } = this.state;
+
+    let schedule = this.prepSchedule(scheduleObj);
+
+    // let newServices = this.prepServicesData(services.services);
+    let newResource = {
+      name,
+      address,
+      long_description,
+      email,
+      website,
+      notes: notes.notes ? this.prepNotesData(notes.notes) : [],
+      schedule: { schedule_days: schedule },
+    };
+
+    let requestString = '/api/resources';
+    dataService.post(requestString, { resources: [newResource] }, getAuthRequestHeaders())
+      .then((response) => {
+        if (response.ok) {
+          alert('Resource successfuly created. Thanks!');
+          browserHistory.push('/');
+        } else {
+          alert('Issue creating resource, please try again.');
+          console.log(logMessage);
+        }
+      })
+  }
+
+
+  hasKeys(object) {
+    let size = 0;
+    for (let key in object) {
+      if (object.hasOwnProperty(key)) {
+        return true;
+      }
+      return false;
+    }
+  }
+  prepSchedule(scheduleObj) {
+    let newSchedule = [];
+    let tempDay = {};
+    Object.keys(scheduleObj).forEach(day => {
+      scheduleObj[day].forEach(curr => {
+        tempDay = {};
+        tempDay.day = day;
+        tempDay.opens_at = curr.opens_at;
+        tempDay.closes_at = curr.closes_at;
+        newSchedule.push(tempDay);
       });
+    });
+    return newSchedule;
   }
 
   handleSubmit() {
     this.setState({ submitting: true });
-    const resource = this.state.resource;
-    const promises = [];
+    let resource = this.state.resource;
+    let promises = [];
 
-    // Resource
-    const resourceChangeRequest = {};
+    //Resource
+    let resourceChangeRequest = {};
     let resourceModified = false;
     if (this.state.name && this.state.name !== resource.name) {
       resourceChangeRequest.name = this.state.name;
@@ -169,8 +276,7 @@ class EditSections extends React.Component {
       resourceChangeRequest.long_description = this.state.long_description;
       resourceModified = true;
     }
-    if (this.state.short_description &&
-      this.state.short_description !== resource.short_description) {
+    if (this.state.short_description && this.state.short_description !== resource.short_description) {
       resourceChangeRequest.short_description = this.state.short_description;
       resourceModified = true;
     }
@@ -186,34 +292,37 @@ class EditSections extends React.Component {
       resourceChangeRequest.email = this.state.email;
       resourceModified = true;
     }
-    // fire off resource request
+    //fire off resource request
     if (resourceModified) {
-      promises.push(dataService.post(`/api/resources/${resource.id}/change_requests`, { change_request: resourceChangeRequest }));
+      promises.push(dataService.post('/api/resources/' + resource.id + '/change_requests', { change_request: resourceChangeRequest }));
     }
 
-    // Fire off phone requests
-    postCollection(this.state.phones, this.state.resource.phones, 'phones', promises, resource.id);
+    //Fire off phone requests
+    postCollection(this.state.phones, this.state.resource.phones, 'phones', promises);
 
     // schedule
-    postObject(this.state.scheduleObj, 'schedule_days', promises);
+    postSchedule(this.state.scheduleObj, promises);
 
-    // address
-    if (!_.isEmpty(this.state.address) && this.state.resource.address) {
-      promises.push(dataService.post(`/api/addresses/${this.state.resource.address.id}/change_requests`, {
-        change_request: this.state.address,
+    //address
+    if (this.hasKeys(this.state.address) && this.state.resource.address) {
+      promises.push(dataService.post('/api/addresses/' + this.state.resource.address.id + '/change_requests', {
+        change_request: this.state.address
       }));
     }
 
-    // Services
+    //Services
     this.postServices(this.state.services.services, promises);
 
-    // Notes
-    postNotes(this.state.notes, promises, { path: 'resources', id: this.state.resource.id });
+    //Notes
+    this.postNotes(this.state.notes, promises, { path: "resources", id: this.state.resource.id });
 
-    // TODO: Handle errors
-    Promise.all(promises).then(() => {
-      this.props.router.push({ pathname: '/resource', query: { id: this.state.resource.id } });
+    var that = this;
+    Promise.all(promises).then(function(resp) {
+      that.props.router.push({ pathname: "/resource", query: { id: that.state.resource.id } });
+    }).catch(function(err) {
+      console.log(err);
     });
+
   }
 
   postServices(servicesObj, promises) {
@@ -252,6 +361,75 @@ class EditSections extends React.Component {
     }
   }
 
+  prepServicesData(servicesObj) {
+    let newServices = [];
+    for (let key in servicesObj) {
+      if (servicesObj.hasOwnProperty(key)) {
+        let currentService = servicesObj[key];
+
+        if (key < 0) {
+          if (currentService.notesObj) {
+            let notes = this.objToArray(currentService.notesObj.notes);
+            delete currentService.notesObj;
+            currentService.notes = notes;
+          }
+          currentService.schedule = createFullSchedule(currentService.scheduleObj);
+          delete currentService.scheduleObj;
+
+          if (!isEmpty(currentService)) {
+            newServices.push(currentService);
+          }
+        }
+      }
+    }
+    return newServices;
+  }
+
+  prepNotesData(notes) {
+    let newNotes = [];
+    for (let key in notes) {
+      if (notes.hasOwnProperty(key)) {
+        newNotes.push({ note: notes[key].note });
+      }
+    }
+    return newNotes;
+  }
+
+  objToArray(obj) {
+    let arr = [];
+    for (let key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        arr.push(obj[key]);
+      }
+    }
+
+    return arr;
+  }
+
+  postSchedule(scheduleObj, promises, uriObj) {
+    if (scheduleObj) {
+      postObject(scheduleObj, 'schedule_days', promises);
+    }
+  }
+
+  postNotes(notesObj, promises, uriObj) {
+    if (notesObj) {
+      let notes = notesObj.notes;
+      let newNotes = [];
+      for (let key in notes) {
+        if (notes.hasOwnProperty(key)) {
+          let currentNote = notes[key];
+          if (key < 0) {
+            let uri = '/api/' + uriObj.path + '/' + uriObj.id + '/notes';
+            promises.push(dataService.post(uri, { note: currentNote }));
+          } else {
+            let uri = '/api/notes/' + key + '/change_requests';
+            promises.push(dataService.post(uri, { change_request: currentNote }));
+          }
+        }
+      }
+    }
+  }
   handlePhoneChange(phoneCollection) {
     this.setState({ phones: phoneCollection });
   }
@@ -284,6 +462,10 @@ class EditSections extends React.Component {
     this.setState({ serviceNotes: notesObj });
   }
 
+  formatTime(time) {
+    //FIXME: Use full times once db holds such values.
+    return time.substring(0, 2);
+  }
   renderSectionFields() {
     const resource = this.state.resource;
     return (
@@ -298,6 +480,7 @@ class EditSections extends React.Component {
             <input
               id="edit-name-input"
               type="text"
+              className="input"
               placeholder="Name"
               data-field="name"
               defaultValue={resource.name}
@@ -320,6 +503,7 @@ class EditSections extends React.Component {
             <input
               id="edit-website-input"
               type="url"
+              className="input"
               defaultValue={resource.website}
               data-field="website"
               onChange={this.handleResourceFieldChange}
@@ -331,6 +515,7 @@ class EditSections extends React.Component {
             <input
               id="edit-email-input"
               type="email"
+              className="input"
               defaultValue={resource.email}
               data-field="email"
               onChange={this.handleResourceFieldChange}
@@ -341,7 +526,7 @@ class EditSections extends React.Component {
             <label htmlFor="edit-description-input">Description</label>
             <textarea
               id="edit-description-input"
-              className=""
+              className="input"
               defaultValue={resource.long_description}
               data-field="long_description"
               onChange={this.handleResourceFieldChange}
@@ -364,54 +549,57 @@ class EditSections extends React.Component {
   }
 
   renderServices() {
+    let fields = [];
+    let resource = this.state.resource;
     return (
       <section id="services" className="edit--section">
-        <header className="edit--section--header">
-          <h4>Services</h4>
-        </header>
-        <ul className="edit--section--list">
-          <EditServices
-            services={this.state.resource.services}
-            handleServiceChange={this.handleServiceChange}
-          />
-        </ul>
-      </section>
-    );
+                <header className="edit--section--header">
+                    <h4>Services</h4>
+                </header>
+                <ul className="edit--section--list">
+                    <EditServices services={this.state.resource.services} handleServiceChange={this.handleServiceChange} />
+                </ul>
+            </section>
+    )
   }
 
   render() {
-    return (
-      !this.state.resource ? <Loader /> :
+    let actionButton = <button className="edit--aside--content--submit" disabled={this.state.submitting} onClick={this.handleSubmit}>Save changes</button>;
+    if (this.state.newResource) {
+      actionButton = <button className="edit--aside--content--submit" disabled={this.state.submitting} onClick={this.createResource}>Submit Resource</button>;
+    }
+    return (!this.state.resource && !this.state.newResource ? <Loader /> :
       <div className="edit">
-        <div className="edit--main">
-          <header className="edit--main--header">
-            <h1 className="edit--main--header--title">{this.state.resource.name}</h1>
-          </header>
-          <div className="edit--sections">
-            {this.renderSectionFields()}
-            {this.renderServices()}
+            <div className="edit--main">
+            <header className="edit--main--header">
+              <h1 className="edit--main--header--title">{this.state.resource.name}</h1>
+            </header>
+            <div className="edit--sections">
+                {this.renderSectionFields()}
+                {this.state.newResource ? null : this.renderServices()}
+            </div>
+          </div>
+          <div className="edit--aside">
+            <div className="edit--aside--content">
+                {actionButton}
+                <nav className="edit--aside--content--nav">
+                    <ul>
+                        <li><a href="#info">Info</a></li>
+                        {this.state.newResource ? null : <li><a href="#services">Services</a></li>}
+                    </ul>
+                </nav>
+              </div>
           </div>
         </div>
-        <div className="edit--aside">
-          <div className="edit--aside--content">
-            <button
-              className="edit--aside--content--submit"
-              disabled={this.state.submitting}
-              onClick={this.handleSubmit}
-            >
-              Save changes
-            </button>
-            <nav className="edit--aside--content--nav">
-              <ul>
-                <li><a href="#info">Info</a></li>
-                <li><a href="#services">Services</a></li>
-              </ul>
-            </nav>
-          </div>
-        </div>
-      </div>
-    );
+    )
   }
+}
+
+function isEmpty(map) {
+  for (var key in map) {
+    return !map.hasOwnProperty(key);
+  }
+  return true;
 }
 
 EditSections.propTypes = {
@@ -419,7 +607,7 @@ EditSections.propTypes = {
   // in the resourceid directly as a prop
   location: PropTypes.shape({
     query: PropTypes.shape({
-      resourceid: PropTypes.string.isRequired,
+      resourceid: PropTypes.string,
     }).isRequired,
   }).isRequired,
   // TODO: Figure out what type router actually is

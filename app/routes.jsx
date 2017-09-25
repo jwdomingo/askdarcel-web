@@ -39,6 +39,7 @@ export default (
     <IndexRoute component={ CategoryPage } />
     <Route name="resources" path="/resources" component={ ResourcesTable } />
     <Route name="editResource" path="/resource/edit" component={ EditSections } />
+    <Route name="newResource" path="/resource/new" component={ EditSections } />
     <Route name="resource" path="/resource" component={ Resource }  />
     <Route name="admin" path="/admin" component={ RequireAuth(Admin) } />
     <Route name="login" path="/login" component={ Login } />

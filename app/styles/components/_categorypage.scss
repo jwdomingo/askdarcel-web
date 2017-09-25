@@ -14,7 +14,7 @@
 }
 
 .category-items {
-  @extend %flex-row;
+  @extend %flex-grid;
   margin: 0 auto;
   @include r_max($break-tablet-s) {
     flex-direction: column;

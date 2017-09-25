@@ -1,11 +1,11 @@
-const icons = require.context('../assets/img', true, /ic-.*\.png$/i);
+const icons = require.context('../assets/img', true, /ic-.*\.(png|svg)$/i);
 const iconPathMap = {};
 icons.keys().forEach((key) => {
-  iconPathMap[key.match(/ic-([^@]*)(?:@3x)?.png/)[1]] = icons(key);
+  iconPathMap[key.match(/ic-([^@]*)(?:@3x)?.(?:svg|png)/)[1]] = icons(key);
 });
 
 function icon(name) {
-  return iconPathMap[name.toLowerCase()];
+  return iconPathMap[name.toLowerCase().replace(/\s+/g, '-')];
 }
 
 /* eslint-disable global-require */

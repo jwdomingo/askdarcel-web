@@ -48,7 +48,7 @@ class Service extends Component {
   render() {
     let { infoHidden } = this.state;
     return (
-		<li className="service">
+		<li className="service" id={`service-${this.props.service.id}`} >
 			<div className="service--meta disabled-feature">
 				<p><ServiceCategory category={this.props.service.category} /></p>
 				<p>updated {this.props.service.updated_date}</p>
@@ -117,9 +117,9 @@ class ServiceEligibility extends Component {
 
 class Notes extends Component {
   render() {
-    let notes = this.props.notes.map((note, i) => {
+    let notes = this.props.notes ?  this.props.notes.map((note, i) => {
       return <Note note={note} key={i} />
-    });
+    }) : [];
 
     return (
       <li className="service--details--item">
