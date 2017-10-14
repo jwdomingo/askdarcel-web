@@ -3,7 +3,7 @@ import Loader from '../Loader';
 import EditNotes from './EditNotes';
 import EditSchedule from './EditSchedule';
 import { createTemplateSchedule } from '../../utils/index';
-import CategoriesDropdown from './CategoriesDropdown';
+import MultiSelectDropdown from './MultiSelectDropdown';
 
 class EditServices extends Component {
   constructor(props) {
@@ -113,7 +113,13 @@ class EditService extends Component {
 			this.props.handleChange(this.props.service.key, service);
 		});
 	}
-
+  handleElgibilityChange(eligibilities) {
+    let service = this.state.service;
+    service.eligibilities = eligibilities;
+    this.setState({service: service}, () => {
+      this.props.handleChange(this.props.service.key, service);
+    });
+  }
 	renderCategories() {
 		if(this.props.service.key < 0) {
 			return (<CategoriesDropdown handleCategoryChange={this.handleCategoryChange}/>);
@@ -167,7 +173,12 @@ class EditService extends Component {
 
 					<EditNotes notes={this.props.service.notes} handleNotesChange={this.handleNotesChange} />
 
-					<CategoriesDropdown categories={this.props.service.categories} handleCategoryChange={this.handleCategoryChange} />
+					<MultiSelectDropdown 
+            selectedItems={this.props.service.categories}
+            handleSelectChange={this.handleCategoryChange}
+            label={"Categories"}
+            optionsRoute={"categories"}
+          />
 				</ul>
 			</li>
     );
