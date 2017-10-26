@@ -60,7 +60,7 @@ class ResourcesTable extends Component {
       });
     }
     let url = path + '?' + queryString.stringify(params);
-    fetch(url,{ credentials: 'same-origin' }).then(r => r.json())
+    fetch(url,{ credentials: 'include' }).then(r => r.json())
       .then(data => {
         let openResources = data.resources.filter(resource => {
           let hours = openHours(resource.schedule.schedule_days);
