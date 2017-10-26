@@ -31,7 +31,7 @@ class Resource extends Component {
     const { query } = this.props.location;
     const resourceID = query.id;
     const url = `/api/resources/${resourceID}`;
-    fetch(url).then(r => r.json())
+    fetch(url, { credentials: 'same-origin' }).then(r => r.json())
     .then((data) => {
       this.setState({ resource: data.resource });
     });
