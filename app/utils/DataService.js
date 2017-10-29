@@ -1,13 +1,17 @@
 import * as _ from 'lodash/fp/object';
 
 function setAuthHeaders(resp) {
+  console.log('setting auth headers', resp)
   const headers = resp.headers;
   if (headers.get('access-token') && headers.get('client')) {
-    localStorage.setItem('authHeaders', JSON.stringify({
-      'access-token': headers.get('access-token'),
-      client: headers.get('client'),
-      uid: headers.get('uid'),
-    }));
+    // console.log('we would set new auth headers except for an API bug giving us invalid tokens', headers.get('access-token'), headers.get('client'))
+    // localStorage.setItem('authHeaders', JSON.stringify({
+    //   'access-token': headers.get('access-token'),
+    //   client: headers.get('client'),
+    //   uid: headers.get('uid'),
+    // }));
+  } else {
+    // console.log('no new auth headers to set')
   }
 }
 

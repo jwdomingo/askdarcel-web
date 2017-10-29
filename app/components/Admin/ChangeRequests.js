@@ -3,6 +3,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import * as DataService from '../../utils/DataService';
+import { browserHistory } from 'react-router';
+import Loader from '../Loader';
+import { Link } from 'react-router';
 // import * as _ from 'lodash/fp/object';
 import ChangeRequest from './ChangeRequest';
 // import * as ChangeRequestTypes from './ChangeRequestTypes';
@@ -14,7 +17,9 @@ class ChangeRequestsPage extends React.Component {
     super(props);
     this.state = {
       activeResource: undefined,
-      parsedChanges: {},
+      changeRequests: {},
+      loaded: false,
+      resources: {},
     };
     this.loadAllChanges();
   }
@@ -24,72 +29,94 @@ class ChangeRequestsPage extends React.Component {
    * @return {[type]} [description]
    */
   loadAllChanges() {
-    Promise.all([
-      DataService.get('/api/change_requests', getAuthRequestHeaders()),
-      DataService.get('/api/services/pending', getAuthRequestHeaders()),
-    ]).then((d) => {
-      const parsedChanges = Object.assign(
-        { loaded: true, resources: {} },
-        { changeRequests: d[0].change_requests },
-        { count: d[0].change_requests.length },
-        d[1],
-      );
+    const d = [];
 
-      // Track invidivual Resources
-      const ensureResourceExists = (resource) => {
-        if (parsedChanges.resources[resource.id] === undefined) {
-          // console.log('attaching resource', resource);
-          resource._changeRequests = [];
-          resource._proposedServices = [];
-          resource._collapsed = true;
-          parsedChanges.resources[resource.id] = resource;
-        }
-      };
+    // Done seperately to avoid race conditions since auth invalidates tokens upon request
+    DataService.get('/api/change_requests', getAuthRequestHeaders())
+      .then(changes => {
+        d.push(changes);
+        return DataService.get('/api/services/pending', getAuthRequestHeaders());
+      })
+      .then((pendingServices) => {
+        d.push(pendingServices);
+        const parsedChanges = Object.assign(
+          { loaded: true, resources: {} },
+          { changeRequests: d[0].change_requests },
+          { count: d[0].change_requests.length },
+          d[1],
+        );
 
-      // Attach change requests to this resource
-      parsedChanges.changeRequests.forEach((cr) => {
-        ensureResourceExists(cr.resource);
-        parsedChanges.resources[cr.resource.id]._changeRequests.push(cr);
+        // Track invidivual Resources
+        const ensureResourceExists = (resource) => {
+          if (parsedChanges.resources[resource.id] === undefined) {
+            // console.log('attaching resource', resource);
+            resource._changeRequests = [];
+            resource._proposedServices = [];
+            resource._collapsed = true;
+            parsedChanges.resources[resource.id] = resource;
+          }
+        };
+
+        // Attach change requests to this resource
+        parsedChanges.changeRequests.forEach((cr) => {
+          ensureResourceExists(cr.resource);
+          parsedChanges.resources[cr.resource.id]._changeRequests.push(cr);
+        });
+
+        // Attach proposed services
+        parsedChanges.services.forEach((s) => {
+          ensureResourceExists(s.resource);
+          parsedChanges.resources[s.resource.id]._proposedServices.push(s);
+        });
+
+        this.setState(parsedChanges);
+        console.log(parsedChanges);
+      })
+      .catch(err => {
+        browserHistory.push('/login?next=/admin/changes');
       });
-
-      // Attach proposed services
-      parsedChanges.services.forEach((s) => {
-        ensureResourceExists(s.resource);
-        parsedChanges.resources[s.resource.id]._proposedServices.push(s);
-      });
-
-      this.setState(parsedChanges);
-      console.log(parsedChanges);
-    });
-  }
-
-  setActiveResource(resource) {
-    console.log('setting active resource', resource);
-    this.setState({
-      activeResource: resource,
-    });
   }
 
   /**
-   * Renders the wrapper for an individual resource
-   * with associated changeRequests
+   * Choose a given resource to render individual changes for
+   * @param {Object} resource    The resource object
+   */
+  setActiveResource(resource) {
+    this.setState({ activeResource: resource });
+  }
+
+  /**
+   * Renders the list of resources on the left, that can be clicked to open
+   * the relevant list of changeRequests and proposedServices
    * @param  {Object} resource    A passed in resource
    * @return {JSX}                A full accordian with all the relevant changes
    */
-  renderIndividualResourceListing(resource) {
-    return (
-      <div
-        key={resource.id}
-        className="results-table-entry resource-title"
-        onClick={() => this.setActiveResource(resource)}
-        role="link"
-        tabIndex="-1"
-      >
-        <header>
-          <h4>{ resource.name }</h4>
-        </header>
-      </div>
-    );
+  renderResourceSummaryList() {
+    console.log(this.state);
+    if (this.state.resources) {
+      return Object.keys(this.state.resources).map((resourceID) => {
+        const resource = this.state.resources[resourceID];
+        return (
+          <div
+            key={resource.id}
+            className="results-table-entry resource-title"
+            onClick={() => this.setActiveResource(resource)}
+            role="link"
+            tabIndex="-1"
+          >
+            <header>
+              <h4>{ resource.name }</h4>
+            </header>
+          </div>
+        );
+      });
+    } else {
+      return (
+        <p className="message">
+          Hurrah, it looks like you&#39;ve handled all the outstanding change requests!
+        </p>
+      );
+    }
   }
 
   /**
@@ -158,12 +185,12 @@ class ChangeRequestsPage extends React.Component {
     return (
       <div>
         <div className="titlebox">
-          <h2>{resource.name}</h2>
-          <ul>
-            <li>Changes: ({ resourceChanges.length })</li>
-            <li>Service Changes: ({ serviceChanges.length })</li>
-            <li>Proposed Changes: ({ proposedServices.length })</li>
-          </ul>
+          <h2>
+            <Link htmlStyle="float: right" to={{ pathname: '/resource', query: { id: resource.id } }} target="_blank">
+              <i className="material-icons">link</i>
+            </Link>
+            {resource.name}
+          </h2>
         </div>
         <div>
           { resourceChanges}
@@ -177,54 +204,39 @@ class ChangeRequestsPage extends React.Component {
     );
   }
 
+  //   <ul className="bubbles">
+  //   <li><i className="material-icons">edit</i>Changes: ({ resourceChanges.length })</li>
+  //   <li><i className="material-icons">edit</i>Service Changes: ({ serviceChanges.length })</li>
+  //   <li><i className="material-icons">edit</i>Proposed Services: ({ proposedServices.length })</li>
+  // </ul>
+
   /**
    * render a full list of changeRequests
    * @return {JSX} A full list of changeRequests seperated by resource
    */
   render() {
     return (
-      <div className="admin change-requests results">
-        <div className="results-table">
-          <h1 className="page-title">
-            Change Requests ({ this.state.parsedChanges.count })
-          </h1>
-          {
-            this.state.resources
-              ? (
-                Object.keys(this.state.resources).map((resourceID) => {
-                  return (
-                    <div key={`resource-${resourceID}`}>
-                      { this.renderIndividualResourceListing(this.state.resources[resourceID]) }
-                    </div>
-                  );
-                })
-              )
-
-              : (
-                <p className="message">
-                  Hurrah, it looks like you&#39;ve handled all the outstanding change requests!
-                </p>
-              )
-          }
-        </div>
-
-        <div className={`results-table details ${this.state.activeResource ? '' : 'inactive'}`}>
+      <div className="admin">
+        <h1 className="page-title">
+          Change Requests ({ this.state.count })
+        </h1>
+        <div className="change-requests results">
+          <div className="results-table">
+            { this.state.loaded ? this.renderResourceSummaryList() : (<Loader />) }
+          </div>
           {
             !this.state.activeResource
-              ? (<div>Choose a resource</div>)
-              : (<div>{ this.renderResourceChangeRequests(this.state.activeResource) }</div>)
+              ? (<h2 className="inactive">Choose a resource</h2>)
+              : (
+                  <div className="results-table details">
+                    { this.renderResourceChangeRequests(this.state.activeResource) }
+                  </div>
+                )
           }
         </div>
       </div>
     );
   }
 }
-
-ChangeRequestsPage.propTypes = {
-  // changeRequests: PropTypes.array.isRequired,
-  // services: PropTypes.array.isRequired,
-  // actionHandler: PropTypes.func.isRequired,
-  // bulkActionHandler: PropTypes.func.isRequired,
-};
 
 export default ChangeRequestsPage;

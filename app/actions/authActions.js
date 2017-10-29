@@ -19,6 +19,7 @@ function adminLoginError() {
     type: types.ADMIN_LOGIN_ERROR,
   };
 }
+
 export default {
   adminLogin(email, password) {
     return dispatch => {
