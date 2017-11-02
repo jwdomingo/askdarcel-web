@@ -1,4 +1,4 @@
-FROM nginx:1.10
+FROM nginx:stable
 
 COPY build /app/askdarcel
 COPY version.json /app/askdarcel/_version.json
