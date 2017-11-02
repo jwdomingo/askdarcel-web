@@ -67,4 +67,5 @@ EditPhone.propTypes = {
 };
 
 const EditPhones = editCollectionHOC(EditPhone, 'Phones', {});
+EditPhones.displayName = 'EditPhones';
 export default EditPhones;
