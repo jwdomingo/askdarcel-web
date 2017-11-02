@@ -157,6 +157,9 @@
 
 		textarea {
 			height: calc-em(200px);
+      &:disabled {
+        cursor: not-allowed;
+      }
 		}
 
 		button {

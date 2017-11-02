@@ -83,6 +83,7 @@ class EditService extends Component {
 		this.handleScheduleChange = this.handleScheduleChange.bind(this);
 		this.handleCategoryChange = this.handleCategoryChange.bind(this);
 		this.renderCategories = this.renderCategories.bind(this);
+    this.handleElgibilityChange = this.handleElgibilityChange.bind(this);
 	}
 
 	handleFieldChange(e) {
@@ -155,8 +156,14 @@ class EditService extends Component {
 					</li>
 
 					<li className="edit--section--list--item">
-						<label>Who is eligible for this service</label>
-						<textarea placeholder='Eligibility' data-field='eligibility' defaultValue={this.props.service.eligibility} onChange={this.handleFieldChange} />
+						<label>Old Elgibility (not editable)</label>
+						<textarea disabled placeholder='Please use the Eligibility field below' data-field='eligibility' defaultValue={this.props.service.eligibility} onChange={this.handleFieldChange} />
+            <MultiSelectDropdown
+              selectedItems={this.props.service.eligibilities}
+              handleSelectChange={this.handleElgibilityChange}
+              label={"Elgibility"}
+              optionsRoute={"eligibilities"}
+            />
 					</li>
 
 					<li className="edit--section--list--item">
