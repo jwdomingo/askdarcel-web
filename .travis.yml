@@ -25,6 +25,7 @@ before_install:
 
 script:
   - npm run lint
+  - ./travis-testcafe.sh
 
 after_success:
   - tools/docker-build.sh
