@@ -16,13 +16,11 @@ import ChangeRequests from './components/Admin/ChangeRequests';
 
 import { RequireAuth } from './components/Auth/RequireAuth';
 
-
 function redirectToRoot (nextState, replace) {
   replace({
     pathname: '/',
   });
 };
-
 
 // Adapted from
 // https://github.com/ReactTraining/react-router/issues/2019#issuecomment-256591800
@@ -33,7 +31,6 @@ function scrollToTop(prevState, nextState) {
     window.scrollTo(0, 0);
   }
 }
-
 
 export default (
   <Route path="/" component={ App } onChange={ scrollToTop } >

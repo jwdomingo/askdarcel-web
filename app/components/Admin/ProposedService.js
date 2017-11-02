@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import TextareaAutosize from 'react-autosize-textarea';
 import * as DataService from '../../utils/DataService';
 import * as ChangeRequestTypes from './ChangeRequestTypes';
-import Actions from './Actions';
 import { getAuthRequestHeaders } from '../../utils/index';
 
 class ProposedService extends React.Component {

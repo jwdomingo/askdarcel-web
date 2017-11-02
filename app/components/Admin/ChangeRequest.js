@@ -1,9 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import TextareaAutosize from 'react-autosize-textarea';
-import * as ChangeRequestTypes from './ChangeRequestTypes';
-import Actions from './Actions';
-import utils from './helpers/utils';
+
 import * as DataService from '../../utils/DataService';
 import { getAuthRequestHeaders } from '../../utils/index';
 
@@ -14,13 +12,6 @@ class ChangeRequest extends React.Component {
       existingRecord: {},
       changeRequestFields: {},
     };
-  }
-
-  changeFieldValue(key, value) {
-    const tempChangeRequestFields = this.state.changeRequestFields;
-    tempChangeRequestFields[key] = value;
-    // tempChangeRequestFields.edited = true;
-    this.setState({ changeRequestFields: Object.assign({}, tempChangeRequestFields) });
   }
 
   getExistingValueFromChangeRequest(changeRequest, fieldName, fieldValue) {
@@ -41,42 +32,41 @@ class ChangeRequest extends React.Component {
     }
   }
 
+  changeFieldValue(key, value) {
+    const tempChangeRequestFields = this.state.changeRequestFields;
+    tempChangeRequestFields[key] = value;
+    this.setState({ changeRequestFields: Object.assign({}, tempChangeRequestFields) });
+  }
+
   approve() {
     const details = {};
     this.props.changeRequest.field_changes.forEach((change) => {
       details[change.field_name] = change.field_value;
     });
-
     const body = Object.assign({}, details, this.state.changeRequestFields);
-    console.log('approving', this.props.changeRequest.id, body);
 
     return DataService.post(
       `/api/change_requests/${this.props.changeRequest.id}/approve`,
       { change_request: body },
       getAuthRequestHeaders(),
     )
-
     .then(response =>
-      this.props.updateFunction(response, this.props.changeRequest, body)
+      this.props.updateFunction(response, this.props.changeRequest)
     )
-
     .catch((err) => {
       console.log(err);
     });
   }
 
   reject() {
-    console.log('rejecting', this.props.changeRequest.id, this.state.changeRequestFields);
     return DataService.post(
       `/api/change_requests/${this.props.changeRequest.id}/reject`,
       {},
       getAuthRequestHeaders(),
     )
-
     .then(response =>
       this.props.updateFunction(response, this.props.changeRequest, {})
     )
-
     .catch((err) => {
       console.log(err);
     });
@@ -125,12 +115,10 @@ class ChangeRequest extends React.Component {
             </div>
           </div>
         );
-        // return (<div>{change.field_name}: {change.field_value}</div>);
     }
   }
 
   render() {
-    console.log(this.props.changeRequest);
     return (
       <div className="change-request">
 
@@ -157,10 +145,6 @@ class ChangeRequest extends React.Component {
             Reject
           </button>
         </div>
-
-        { /* this.renderChangeRequest(this.props.changeRequest) */ }
-        { /* this.renderChangeRequestPretext(this.props.changeRequest) */ }
-        { /* this.renderChangeRequest(this.props.changeRequest) */ }
       </div>
     );
   }

@@ -1,15 +1,10 @@
-// import * as ChangeRequestTypes from './ChangeRequestTypes';
-// import Actions from './Actions';
 import React from 'react';
-import PropTypes from 'prop-types';
-import * as DataService from '../../utils/DataService';
-import { browserHistory } from 'react-router';
+import { browserHistory, Link } from 'react-router';
 import Loader from '../Loader';
-import { Link } from 'react-router';
-// import * as _ from 'lodash/fp/object';
 import ChangeRequest from './ChangeRequest';
-// import * as ChangeRequestTypes from './ChangeRequestTypes';
 import ProposedService from './ProposedService';
+
+import * as DataService from '../../utils/DataService';
 import { getAuthRequestHeaders } from '../../utils/index';
 
 class ChangeRequestsPage extends React.Component {
@@ -40,14 +35,13 @@ class ChangeRequestsPage extends React.Component {
   loadAllChanges() {
     let changeRequests;
 
-    // Done seperately to avoid race conditions since auth invalidates tokens upon request
+    // Requests sent seperately to avoid race conditions since auth invalidates tokens upon request
     DataService.get('/api/change_requests', getAuthRequestHeaders())
-      .then(r => {
+      .then((r) => {
         changeRequests = r.change_requests;
         return DataService.get('/api/services/pending', getAuthRequestHeaders());
       })
       .then((pendingServices) => {
-        // d.push(pendingServices);
         const parsedChanges = Object.assign(
           { loaded: true, resources: {} },
           { changeRequests, count: changeRequests.length },
@@ -57,7 +51,6 @@ class ChangeRequestsPage extends React.Component {
         // Track invidivual Resources
         const ensureResourceExists = (resource) => {
           if (parsedChanges.resources[resource.id] === undefined) {
-            // console.log('attaching resource', resource);
             resource._changeRequests = [];
             resource._proposedServices = [];
             resource._collapsed = true;
@@ -79,18 +72,21 @@ class ChangeRequestsPage extends React.Component {
 
         this.setState(parsedChanges);
       })
-      .catch(err => {
+      .catch((err) => {
+        console.log(err);
         browserHistory.push('/login?next=/admin/changes');
       });
   }
 
   /**
-   * Updates the view, cleaning up changeRequests that have been approved/rejected
+   * Updates the view when a child component makes changes,
+   * cleaning up changeRequests that have been approved/rejected
+   *
    * @param  {Object} resp             The API response
    * @param  {Object} changeRequest    The change request to update
    * @param  {Object} body             The request body saved
    */
-  update(resp, changeRequest, body) {
+  update(resp, changeRequest) {
     const resources = this.state.resources;
     const r = resources[changeRequest.resource.id];
     const type = changeRequest.type ? '_changeRequests' : '_proposedServices';
@@ -111,6 +107,7 @@ class ChangeRequestsPage extends React.Component {
   /**
    * Renders the list of resources on the left, that can be clicked to open
    * the relevant list of changeRequests and proposedServices
+   *
    * @param  {Object} resource    A passed in resource
    * @return {JSX}                A full accordian with all the relevant changes
    */
@@ -150,15 +147,16 @@ class ChangeRequestsPage extends React.Component {
    *                              proposedServices in order.
    */
   renderResourceChangeRequests(resource) {
-    const services = {};
     const resourceChanges = [];
     const serviceChanges = [];
     const proposedServices = [];
+    let service;
+    // const services = {};
 
     resource._changeRequests.forEach((changeRequest) => {
       switch (changeRequest.type) {
         case 'ServiceChangeRequest':
-          const service = changeRequest.resource.services
+          service = changeRequest.resource.services
             .find(s => s.id === changeRequest.object_id);
           serviceChanges.push(
             <ChangeRequest
@@ -169,6 +167,7 @@ class ChangeRequestsPage extends React.Component {
             />,
           );
 
+          // TODO Group ServiceChangeRequests by service\
           // if (services[changeRequest.object_id] === undefined) {
           //   services[changeRequest.object_id] = [];
           // }
@@ -182,8 +181,14 @@ class ChangeRequestsPage extends React.Component {
         // case 'ResourceChangeRequest':
         // case 'ScheduleDayChangeRequest':
         //   sections.resourceChanges.push(
-        //     <div key={`change-request-${changeRequest.id}`} className="request-container resource-change-wrapper">
-        //       <ChangeRequest changeRequest={changeRequest} actionHandler={this.props.actionHandler} />
+        //     <div
+        //       key={`change-request-${changeRequest.id}`}
+        //       className="request-container resource-change-wrapper"
+        //     >
+        //       <ChangeRequest
+        //         changeRequest={changeRequest}
+        //         actionHandler={this.props.actionHandler}
+        //       />
         //     </div>
         //   );
         //   break;
@@ -199,7 +204,7 @@ class ChangeRequestsPage extends React.Component {
       }
     });
 
-    resource._proposedServices.forEach(service => {
+    resource._proposedServices.forEach((service) => {
       proposedServices.push(
         <ProposedService
           key={service.id}
@@ -225,7 +230,7 @@ class ChangeRequestsPage extends React.Component {
         {
           serviceChanges.length || proposedServices.length
             ? <h3>Services</h3>
-            : <span></span>
+            : <span />
         }
 
         <div className="change-request-wrapper">
