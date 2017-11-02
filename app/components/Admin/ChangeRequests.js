@@ -21,29 +21,37 @@ class ChangeRequestsPage extends React.Component {
       loaded: false,
       resources: {},
     };
+
+    this.update = this.update.bind(this);
     this.loadAllChanges();
   }
 
   /**
+   * Choose a given resource to render individual changes for
+   * @param {Object} resource    The resource object
+   */
+  setActiveResource(resource) {
+    this.setState({ activeResource: resource });
+  }
+
+  /**
    * Loads and parses all the change requests and pending services
-   * @return {[type]} [description]
    */
   loadAllChanges() {
-    const d = [];
+    let changeRequests;
 
     // Done seperately to avoid race conditions since auth invalidates tokens upon request
     DataService.get('/api/change_requests', getAuthRequestHeaders())
-      .then(changes => {
-        d.push(changes);
+      .then(r => {
+        changeRequests = r.change_requests;
         return DataService.get('/api/services/pending', getAuthRequestHeaders());
       })
       .then((pendingServices) => {
-        d.push(pendingServices);
+        // d.push(pendingServices);
         const parsedChanges = Object.assign(
           { loaded: true, resources: {} },
-          { changeRequests: d[0].change_requests },
-          { count: d[0].change_requests.length },
-          d[1],
+          { changeRequests, count: changeRequests.length },
+          pendingServices,
         );
 
         // Track invidivual Resources
@@ -70,7 +78,6 @@ class ChangeRequestsPage extends React.Component {
         });
 
         this.setState(parsedChanges);
-        console.log(parsedChanges);
       })
       .catch(err => {
         browserHistory.push('/login?next=/admin/changes');
@@ -78,11 +85,27 @@ class ChangeRequestsPage extends React.Component {
   }
 
   /**
-   * Choose a given resource to render individual changes for
-   * @param {Object} resource    The resource object
+   * Updates the view, cleaning up changeRequests that have been approved/rejected
+   * @param  {Object} resp             The API response
+   * @param  {Object} changeRequest    The change request to update
+   * @param  {Object} body             The request body saved
    */
-  setActiveResource(resource) {
-    this.setState({ activeResource: resource });
+  update(resp, changeRequest, body) {
+    const resources = this.state.resources;
+    const r = resources[changeRequest.resource.id];
+    const type = changeRequest.type ? '_changeRequests' : '_proposedServices';
+    const pos = r[type].indexOf(changeRequest);
+
+    if (pos > -1) {
+      r[type].splice(pos, 1);
+    }
+
+    if (r._changeRequests.length === 0 && r._proposedServices.length === 0) {
+      delete resources[changeRequest.resource.id];
+      this.state.activeResource = undefined;
+    }
+
+    this.setState({ resources });
   }
 
   /**
@@ -92,14 +115,13 @@ class ChangeRequestsPage extends React.Component {
    * @return {JSX}                A full accordian with all the relevant changes
    */
   renderResourceSummaryList() {
-    console.log(this.state);
     if (this.state.resources) {
       return Object.keys(this.state.resources).map((resourceID) => {
         const resource = this.state.resources[resourceID];
         return (
           <div
             key={resource.id}
-            className="results-table-entry resource-title"
+            className={`results-table-entry resource-title ${this.state.activeResource === resource ? 'active' : ''}`}
             onClick={() => this.setActiveResource(resource)}
             role="link"
             tabIndex="-1"
@@ -136,10 +158,14 @@ class ChangeRequestsPage extends React.Component {
     resource._changeRequests.forEach((changeRequest) => {
       switch (changeRequest.type) {
         case 'ServiceChangeRequest':
+          const service = changeRequest.resource.services
+            .find(s => s.id === changeRequest.object_id);
           serviceChanges.push(
             <ChangeRequest
               key={changeRequest.id}
               changeRequest={changeRequest}
+              updateFunction={this.update}
+              title={service.name}
             />,
           );
 
@@ -167,6 +193,7 @@ class ChangeRequestsPage extends React.Component {
             <ChangeRequest
               key={changeRequest.id}
               changeRequest={changeRequest}
+              updateFunction={this.update}
             />,
           );
       }
@@ -177,26 +204,31 @@ class ChangeRequestsPage extends React.Component {
         <ProposedService
           key={service.id}
           service={service}
-          actionHandler={this.props.actionHandler}
+          updateFunction={this.update}
         />,
       );
     });
 
     return (
-      <div>
-        <div className="titlebox">
-          <h2>
-            <Link htmlStyle="float: right" to={{ pathname: '/resource', query: { id: resource.id } }} target="_blank">
-              <i className="material-icons">link</i>
-            </Link>
-            {resource.name}
-          </h2>
-        </div>
-        <div>
+      <div className="titlebox">
+        <h2>
+          <Link to={{ pathname: '/resource', query: { id: resource.id } }} target="_blank">
+            <i className="material-icons">link</i>
+          </Link>
+          {resource.name}
+        </h2>
+
+        <div className="change-request-wrapper">
           { resourceChanges}
         </div>
-        <div>
-          <h3>Services</h3>
+
+        {
+          serviceChanges.length || proposedServices.length
+            ? <h3>Services</h3>
+            : <span></span>
+        }
+
+        <div className="change-request-wrapper">
           { serviceChanges }
           { proposedServices }
         </div>
@@ -204,34 +236,25 @@ class ChangeRequestsPage extends React.Component {
     );
   }
 
-  //   <ul className="bubbles">
-  //   <li><i className="material-icons">edit</i>Changes: ({ resourceChanges.length })</li>
-  //   <li><i className="material-icons">edit</i>Service Changes: ({ serviceChanges.length })</li>
-  //   <li><i className="material-icons">edit</i>Proposed Services: ({ proposedServices.length })</li>
-  // </ul>
-
   /**
    * render a full list of changeRequests
    * @return {JSX} A full list of changeRequests seperated by resource
    */
   render() {
     return (
-      <div className="admin">
-        <h1 className="page-title">
-          Change Requests ({ this.state.count })
-        </h1>
-        <div className="change-requests results">
-          <div className="results-table">
-            { this.state.loaded ? this.renderResourceSummaryList() : (<Loader />) }
-          </div>
+      <div className="admin change-requests results">
+        <div className="results-table summary">
+          <h1 className="page-title">
+            Change Requests { this.state.count ? `(${this.state.count})` : '' }
+          </h1>
+
+          { this.state.loaded ? this.renderResourceSummaryList() : (<Loader />) }
+        </div>
+        <div className="results-table details">
           {
             !this.state.activeResource
               ? (<h2 className="inactive">Choose a resource</h2>)
-              : (
-                  <div className="results-table details">
-                    { this.renderResourceChangeRequests(this.state.activeResource) }
-                  </div>
-                )
+              : this.renderResourceChangeRequests(this.state.activeResource)
           }
         </div>
       </div>

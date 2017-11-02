@@ -1,8 +1,10 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import TextareaAutosize from 'react-autosize-textarea';
-import * as dataService from '../../utils/DataService';
+import * as DataService from '../../utils/DataService';
 import * as ChangeRequestTypes from './ChangeRequestTypes';
 import Actions from './Actions';
+import { getAuthRequestHeaders } from '../../utils/index';
 
 class ProposedService extends React.Component {
   constructor(props) {
@@ -51,6 +53,42 @@ class ProposedService extends React.Component {
       notes: tempNotes,
       schedule: tempSchedule,
       categories: tempCategories,
+    });
+  }
+
+  approve() {
+    const { notes, schedule, serviceFields } = this.state;
+    console.log('approving', this.props.service, { ...serviceFields, notes, schedule });
+
+    return DataService.post(
+      `/api/services/${this.props.service.id}/approve`,
+      { ...serviceFields, notes, schedule },
+      getAuthRequestHeaders(),
+    )
+
+    .then(response =>
+      this.props.updateFunction(response, this.props.service)
+    )
+
+    .catch((err) => {
+      console.log(err);
+    });
+  }
+
+  reject() {
+    console.log('rejecting')
+    return DataService.post(
+      `/api/services/${this.props.service.id}/reject`,
+      {},
+      getAuthRequestHeaders(),
+    )
+
+    .then(response =>
+      this.props.updateFunction(response, this.props.service)
+    )
+
+    .catch((err) => {
+      console.log(err);
     });
   }
 
@@ -151,23 +189,33 @@ class ProposedService extends React.Component {
   render() {
     let { notes, schedule, serviceFields } = this.state;
     return (
-      <div className="change-log">
+      <div className="change-request">
+        <h4>New Service:</h4>
         <div className="request-fields change-wrapper">
           {this.renderAdditionalFields()}
           {this.renderCategoryFields()}
           {this.renderNotesFields()}
           {this.renderScheduleFields()}
         </div>
-        <Actions
-            id={this.props.service.id}
-            changeRequestFields={{...serviceFields, notes, schedule}}
-            actionHandler={this.props.actionHandler}
-            approveAction={ChangeRequestTypes.APPROVE_SERVICE}
-            rejectAction={ChangeRequestTypes.REJECT_SERVICE}
-          />
+        <div className="actions request-cell btn-group">
+          <button onClick={() => this.approve()}>
+            <i className="material-icons">done</i>
+            Approve
+          </button>
+
+          <button onClick={() => this.reject()} className="danger">
+            <i className="material-icons">delete</i>
+            Reject
+          </button>
+        </div>
       </div>
     );
   }
 }
+
+ProposedService.propTypes = {
+  service: PropTypes.object.isRequired,
+  updateFunction: PropTypes.func.isRequired,
+};
 
 export default ProposedService;

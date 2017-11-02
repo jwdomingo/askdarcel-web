@@ -4,13 +4,12 @@ import TextareaAutosize from 'react-autosize-textarea';
 import * as ChangeRequestTypes from './ChangeRequestTypes';
 import Actions from './Actions';
 import utils from './helpers/utils';
-import * as dataService from '../../utils/DataService';
+import * as DataService from '../../utils/DataService';
 import { getAuthRequestHeaders } from '../../utils/index';
 
 class ChangeRequest extends React.Component {
   constructor(props) {
     super(props);
-    // this.props.changeRequest.field_changes.forEach(ch)
     this.state = {
       existingRecord: {},
       changeRequestFields: {},
@@ -21,7 +20,7 @@ class ChangeRequest extends React.Component {
     const tempChangeRequestFields = this.state.changeRequestFields;
     tempChangeRequestFields[key] = value;
     // tempChangeRequestFields.edited = true;
-    this.setState({ changeRequestFields: Object.assign({}, ) });
+    this.setState({ changeRequestFields: Object.assign({}, tempChangeRequestFields) });
   }
 
   getExistingValueFromChangeRequest(changeRequest, fieldName, fieldValue) {
@@ -43,26 +42,44 @@ class ChangeRequest extends React.Component {
   }
 
   approve() {
-    let details = {}
-    this.props.changeRequest.field_changes.forEach(change => {
-      details[change.field_name] = change.field_value
+    const details = {};
+    this.props.changeRequest.field_changes.forEach((change) => {
+      details[change.field_name] = change.field_value;
     });
-    const body = Object.assign({}, details, this.state.changeRequestFields)
+
+    const body = Object.assign({}, details, this.state.changeRequestFields);
     console.log('approving', this.props.changeRequest.id, body);
-    // return
-    return dataService.post(
+
+    return DataService.post(
       `/api/change_requests/${this.props.changeRequest.id}/approve`,
       { change_request: body },
       getAuthRequestHeaders(),
-    ).then((response) => {
-      console.log(response);
-    }).catch((err) => {
+    )
+
+    .then(response =>
+      this.props.updateFunction(response, this.props.changeRequest, body)
+    )
+
+    .catch((err) => {
       console.log(err);
     });
   }
 
   reject() {
     console.log('rejecting', this.props.changeRequest.id, this.state.changeRequestFields);
+    return DataService.post(
+      `/api/change_requests/${this.props.changeRequest.id}/reject`,
+      {},
+      getAuthRequestHeaders(),
+    )
+
+    .then(response =>
+      this.props.updateFunction(response, this.props.changeRequest, {})
+    )
+
+    .catch((err) => {
+      console.log(err);
+    });
   }
 
   renderFieldChange(change) {
@@ -115,17 +132,10 @@ class ChangeRequest extends React.Component {
   render() {
     console.log(this.props.changeRequest);
     return (
-      <div className="change-request-wrapper">
-        <div className="actions request-cell">
-          <i
-            className="material-icons"
-            onClick={() => this.approve()}
-          >done</i>
-          <i
-            className="material-icons"
-            onClick={() => this.reject()}
-          >delete</i>
-        </div>
+      <div className="change-request">
+
+        <h4>{ this.props.title || '' }</h4>
+
         <div className="changes">
           {
             this.props.changeRequest.field_changes.map(f => (
@@ -135,6 +145,19 @@ class ChangeRequest extends React.Component {
             ))
           }
         </div>
+
+        <div className="actions request-cell btn-group">
+          <button onClick={() => this.approve()}>
+            <i className="material-icons">done</i>
+            Approve
+          </button>
+
+          <button onClick={() => this.reject()} className="danger">
+            <i className="material-icons">delete</i>
+            Reject
+          </button>
+        </div>
+
         { /* this.renderChangeRequest(this.props.changeRequest) */ }
         { /* this.renderChangeRequestPretext(this.props.changeRequest) */ }
         { /* this.renderChangeRequest(this.props.changeRequest) */ }
@@ -144,8 +167,13 @@ class ChangeRequest extends React.Component {
 }
 
 ChangeRequest.propTypes = {
-  // actionHandler: PropTypes.func.isRequired,
+  title: PropTypes.string,
   changeRequest: PropTypes.object.isRequired,
+  updateFunction: PropTypes.func.isRequired,
+};
+
+ChangeRequest.defaultProps = {
+  title: '',
 };
 
 export default ChangeRequest;
