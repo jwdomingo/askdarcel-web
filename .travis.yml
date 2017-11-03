@@ -16,12 +16,13 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-4.8
+  artifacts:
+    s3_region: us-east-1
+    paths:
+      - $(git ls-files -o screenshots/ | tr "\n" ":")
 
 before_install:
   - npm install -g npm@5.2.0  # Do not bump until https://github.com/npm/npm/issues/17858 is fixed
-  - export CHROME_BIN=chromium-browser
-  - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
 
 script:
   - npm run lint

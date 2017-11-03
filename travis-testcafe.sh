@@ -38,10 +38,11 @@ sleep 60
 # Print out container logs in case if an error occurs
 docker logs api
 
-npm run testcafe -- chromium \
-  --quarantine-mode \
+npm run testcafe -- chromium:headless \
   --skip-js-errors \
   --assertion-timeout 50000 \
-  --page-load-timeout 15000 \
-  --selector-timeout 15000 \
+  --page-load-timeout 30000 \
+  --selector-timeout 30000 \
+  --screenshots screenshots/ \
+  --screenshots-on-fails \
   testcafe/*.js
