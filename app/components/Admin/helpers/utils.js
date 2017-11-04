@@ -1,7 +1,6 @@
 export default {
   getScheduleChanges(changeRequest) {
     const { resource, field_changes } = changeRequest;
-    console.log(resource)
     const day = field_changes.find(change => change.field_name === 'day');
     const current_value = resource.schedule.schedule_days
       .find(current => day.field_value === current.day);
