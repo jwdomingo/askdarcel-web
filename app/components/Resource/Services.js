@@ -65,7 +65,7 @@ class Service extends Component {
         <div className="service-application-process-container">
           <ul className="service--details">
             <ServiceEligibility subject='How to apply' result={this.props.service.application_process}/>
-            <ServiceEligibility subject='Eligibility' result={this.props.service.eligibility}/>
+            <ServiceEligibilities subject='Eligibilities' eligibilities={this.props.service.eligibilities}/>
             <ServiceEligibility subject='Required documents' result={this.props.service.required_documents}/>
             <ServiceEligibility subject='Fees' result={this.props.service.fee}/>
             {this.props.service.notes.length ? <Notes notes={this.props.service.notes}/> : null  }
@@ -110,6 +110,17 @@ class ServiceEligibility extends Component {
       <li className="service--details--item">
         <header>{this.props.subject}</header>
         <div className="service--details--item--info">{this.props.result}</div>
+      </li>
+    ) : null;
+  }
+}
+
+class ServiceEligibilities extends Component {
+  render() {
+    return this.props.eligibilities ? (
+      <li className="service--details--item">
+        <header>{this.props.subject}</header>
+        <div className="service--details--item--info">{this.props.eligibilities.map(eligibility => <p>{eligibility.name}</p>)}</div>
       </li>
     ) : null;
   }
