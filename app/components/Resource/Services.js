@@ -86,12 +86,12 @@ class Service extends Component {
 
 class WeeklyHours extends Component {
 	render() {
-		return (
+		return this.props.schedule.schedule_days.length > 0 ? (
 			<li className="service--details--item">
 				<header>Hours</header>
 				<div className="service--details--item--info"><DetailedHours schedule={this.props.schedule.schedule_days} /></div>
 			</li>
-		);
+		) : null;
 	}
 }
 
@@ -117,7 +117,7 @@ class ServiceEligibility extends Component {
 
 class ServiceEligibilities extends Component {
   render() {
-    return this.props.eligibilities ? (
+    return this.props.eligibilities.length > 0 ? (
       <li className="service--details--item">
         <header>{this.props.subject}</header>
         <div className="service--details--item--info">{this.props.eligibilities.map(eligibility => <p>{eligibility.name}</p>)}</div>
